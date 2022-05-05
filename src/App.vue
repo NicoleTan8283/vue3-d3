@@ -1,11 +1,22 @@
 <script setup lang="ts">
 // This starter template is using Vue 3 <script setup> SFCs
+
+import router from './router';
+
 // Check out https://vuejs.org/api/sfc-script-setup.html#script-setup
-import HelloWorld from './components/HelloWorld.vue'
+function toRoute(routerName: string) {
+  router.push(routerName)
+}
 </script>
 
 <template>
-  <HelloWorld msg="Hello Vue 3 + TypeScript + Vite" />
+  <el-button @click="toRoute('tools')">
+    侧位片分析
+  </el-button>
+  <el-button @click="toRoute('vto')">
+    vto
+  </el-button>
+  <router-view />
 </template>
 
 <style>
