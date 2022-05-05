@@ -1,5 +1,8 @@
 <template>
-  <div class="" />
+  <div class="">
+    <SvgIcon name="auto" />
+    自动定点
+  </div>
 </template>
 
 <script setup lang="ts">
