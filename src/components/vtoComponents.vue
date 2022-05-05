@@ -41,6 +41,7 @@
 <script setup lang="ts">
 import * as d3 from 'd3';
 import { D3ZoomEvent, ZoomTransform } from 'd3';
+import { addZoom } from "@/utils/d3.helper";
 import { onMounted, PropType, Ref, ref, watch } from 'vue';
 
 type CurveData = {
@@ -95,7 +96,7 @@ const emit = defineEmits(['update:points']);
 onMounted(()=> {
   drawLines();
   drawPoint();
-  addZoom();
+  addZoom("svg", "svg g", zoomCallback);
 })
 watch(
   ()=> props.points,
@@ -141,16 +142,19 @@ const pointDrag = d3.drag<SVGCircleElement, [number, number]>().on('start', (e, 
   newPoints.splice(pointIndex, 1, newPoint);
   emit('update:points', newPoints);
 })
-function addZoom() {
-  const svg = d3.select<SVGSVGElement, unknown>('svg');
-  const g = d3.select('svg g');
-  const zoom = d3.zoom<SVGSVGElement, unknown>().on('zoom', (e)=> {
-    transform = e.transform
-    g.attr('transform', transform.toString());
-    g.style('stroke-width', 2 / Math.sqrt(transform.k))
-  })
-  svg.call(zoom).call(zoom.transform, d3.zoomIdentity);
+function zoomCallback(e: D3ZoomEvent<HTMLElement, unknown>) {
+  transform = e.transform;
 }
+// function addZoom() {
+//   const svg = d3.select<SVGSVGElement, unknown>('svg');
+//   const g = d3.select('svg g');
+//   const zoom = d3.zoom<SVGSVGElement, unknown>().on('zoom', (e)=> {
+//     transform = e.transform
+//     g.attr('transform', transform.toString());
+//     g.style('stroke-width', 2 / Math.sqrt(transform.k))
+//   })
+//   svg.call(zoom).call(zoom.transform, d3.zoomIdentity);
+// }
 function drawPoint() {
   points = d3.select<SVGGElement, number[]>('svg g.points').selectAll<SVGCircleElement, number[]>('circle').data([...props.points]);
   points.enter().append('circle').merge(points).attr('r',2).attr('cx', data => data[0] ).attr('cy', data => data[1]).call(pointDrag)
