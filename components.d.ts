@@ -7,6 +7,8 @@ declare module '@vue/runtime-core' {
   export interface GlobalComponents {
     Auto: typeof import('./src/components/publicTools/components/auto.vue')['default']
     ElButton: typeof import('element-plus/es')['ElButton']
+    ElSlider: typeof import('element-plus/es')['ElSlider']
+    ElSwitch: typeof import('element-plus/es')['ElSwitch']
     HelloWorld: typeof import('./src/components/HelloWorld.vue')['default']
     PublicTools: typeof import('./src/components/publicTools/index.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
