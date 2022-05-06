@@ -47,7 +47,20 @@ export function createLine(points: [Point]): string {
   lineGenerator.curve(curve);
   return lineGenerator(points) || "";
 }
-
+/**
+ * 计算任意两直线的角度
+ * @param point1 直线1点1
+ * @param point2 直线1点2
+ * @param point3 直线2点1
+ * @param point4 直线2点2
+ * @returns 返回两条直线相交的角度
+ */
 export function getAngle(point1: Point, point2:Point, point3:Point, point4:Point): number {
-  return 1;
+  const evA = [point2[0] - point1[0], point2[1] - point1[1]];
+  const evALength = Math.sqrt(Math.pow(evA[0], 2) + Math.pow(evA[1], 2));
+  const evB = [point4[0] - point3[0], point4[1] - point3[1]];
+  const evBLength = Math.sqrt(Math.pow(evB[0], 2) + Math.pow(evB[1], 2));
+  const dotProduct = evA[0] * evB[0] + evA[1] * evB[1];
+  const angle = Math.acos(dotProduct / (evALength * evBLength)) * 180 / Math.PI;
+  return angle;
 }
