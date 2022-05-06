@@ -64,3 +64,18 @@ export function getAngle(point1: Point, point2:Point, point3:Point, point4:Point
   const angle = Math.acos(dotProduct / (evALength * evBLength)) * 180 / Math.PI;
   return angle;
 }
+
+/**
+ * 传入两个点构成的线数组和两个点构成的标尺数据以及标尺长度计算线长度返回
+ * @param line 两个点组成的线数组
+ * @param ruler 标尺点数组
+ * @param biaochi 标尺长度
+ * @returns 线长度
+ */
+export function getLineLength(line: [Point, Point], ruler: [Point, Point], biaochi: number) {
+  const evLine = [line[1][0] - line[0][0], line[1][1] - line[0][1]];
+  const evRuler = [ruler[1][0] - ruler[0][0], ruler[1][1] - ruler[0][1]];
+  const lineLength = Math.sqrt(Math.pow(evLine[0], 2) + Math.pow(evLine[1], 2));
+  const rulerLength = Math.sqrt(Math.pow(evRuler[0], 2) + Math.pow(evRuler[1], 2));
+  return lineLength / rulerLength * biaochi;
+}
