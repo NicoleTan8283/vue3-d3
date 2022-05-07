@@ -1,3 +1,5 @@
+
+import axios from "axios";
 /**
  * 将svg Dom转为图片后下载，如果svg Dom 有image标签，请确保image标签的href属性为图片的base64编码
  * @param svgSelector svg DOM 选择器
@@ -32,4 +34,21 @@ export function downloadSvg(svgSelector: string, width: number, height:number, n
     a.dispatchEvent(evt)
   }
   img.src = url;
+}
+
+export function urlToBase64(url: string): Promise<string> {
+  const base64Promise = new Promise<string>((resolve, reject) => {
+    axios.get(url, {
+      responseType: 'blob',
+    }).then((res)=> {
+      const reader = new FileReader();
+      reader.readAsDataURL(res.data);
+      reader.onloadend = function () {
+        resolve(reader.result as string)
+      };
+    }).catch(() => {
+      reject('error')
+    })
+  })
+  return base64Promise
 }

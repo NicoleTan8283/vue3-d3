@@ -13,10 +13,8 @@
     "lib": ["esnext", "dom"],
     "skipLibCheck": true,
     "baseUrl": ".",
-    "paths": {
-      "@/*": ["src/*"]
-    },
-    "types": ["element-plus/global", "node", "webpack-env"]
+    "paths": { "@/*": ["./src/*"] },
+    "types": ["vite/client", "element-plus/global", "node", "webpack-env"]
   },
   "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue"],
   "references": [{ "path": "./tsconfig.node.json" }]
