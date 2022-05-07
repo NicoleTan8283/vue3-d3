@@ -1,5 +1,5 @@
 import * as d3 from 'd3';
-import { D3ZoomEvent } from 'd3';
+import { D3ZoomEvent, ZoomTransform } from 'd3';
 import { Point } from '@/types/d3.types';
 /**
  * 对父元素添加缩放拖住监听，并设置子元素的tranform为对应的矩阵
@@ -78,4 +78,14 @@ export function getLineLength(line: [Point, Point], ruler: [Point, Point], biaoc
   const lineLength = Math.sqrt(Math.pow(evLine[0], 2) + Math.pow(evLine[1], 2));
   const rulerLength = Math.sqrt(Math.pow(evRuler[0], 2) + Math.pow(evRuler[1], 2));
   return lineLength / rulerLength * biaochi;
+}
+
+/**
+ * 返回点位经过d3旋转拖拽后的真实坐标
+ * @param point 屏幕坐标
+ * @param transform d3旋转矩阵
+ * @returns 返回点位的真实坐标
+ */
+export function getTruePoint(point: Point, transform: ZoomTransform): Point {
+  return [(point[0] - transform.x) / transform.k, (point[1] - transform.y) / transform.k]
 }
