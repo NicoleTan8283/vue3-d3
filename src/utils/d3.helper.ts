@@ -89,3 +89,21 @@ export function getLineLength(line: [Point, Point], ruler: [Point, Point], biaoc
 export function getTruePoint(point: Point, transform: ZoomTransform): Point {
   return [(point[0] - transform.x) / transform.k, (point[1] - transform.y) / transform.k]
 }
+
+
+export function addClickAndMove(select: string,callback:(type: 'click' | 'move', points: Point) => void) {
+  const selector = d3.select(select);
+  selector.on('click', (event: MouseEvent)=> {
+    back(event, 'click');
+  }).on('mousemove', (event: MouseEvent) => {
+    back(event, 'move');
+  })
+  function back(event: MouseEvent, type: 'click' | 'move') {
+    const point = d3.pointer(event);
+    callback(type, point)
+  }
+}
+export function clearDistace(select: string) {
+  const selector = d3.select(select);
+  selector.on('click', null).on('mousemove', null);
+}
