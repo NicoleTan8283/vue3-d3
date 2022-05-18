@@ -14,7 +14,7 @@
     "pinia": "^2.0.13",
     "vue": "^3.2.25",
     "vue-router": "^4.0.15",
-    "zzzj": "^1.0.5"
+    "zzzj": "^1.0.9"
   },
   "devDependencies": {
     "@types/d3": "^7.1.0",

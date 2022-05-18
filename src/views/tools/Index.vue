@@ -1,11 +1,19 @@
 <template>
   <div>
+    <el-upload
+      class="absolute left-48 top-0"
+      :show-file-list="false"
+      :auto-upload="false"
+      :on-change="uploadChange"
+    >
+      <el-button>上传图片</el-button>
+    </el-upload>
     <PublicTools
       :show-tools="showTools"
       @default-size="handleRest"
       @download="handledownload"
-      @save="handleSave"
       @filter-change="setFilter"
+      @auto="onGetKeyPoints"
     />
     <div
       id="toolContent"
@@ -13,7 +21,11 @@
     >
       <svg
         id="contentCavans"
-        viewBox="0, 0, 672, 576"
+        :style="
+          {
+            width,
+            height,
+          }"
       >
         <g>
           <image
@@ -22,8 +34,49 @@
               filter: imgFilter
             }"
           />
-          <g class="lines" />
-          <g class="points" />
+          <g class="lines">
+            <path
+              v-for="line in lineType"
+              
+              :id="line.name"
+              :key="line.name"
+              :d="line.lineString"
+              stroke="#ff0"
+              stroke-width="1"
+              fill="none"
+            />
+          </g>
+          <g class="points">
+            <template 
+              v-for="item in allPoints"
+            >
+              <circle
+                v-if="item.contro"
+                :id="item.landmark"
+                :key="item.landmark"
+                class="contro_points"
+                r="2"
+                :cx="item.x"
+                :cy="item.y"
+              />
+              <text
+                v-if="item.contro"
+                :id="item.landmark"
+                :key="item.landmark"
+                class="dontshow"
+                :x="item.x"
+                :y="item.y"
+                fill="#01ff01"
+              >
+                <tspan
+                  :x="item.x"
+                  :y="item.y"
+                >
+                  {{ item.landmark }}
+                </tspan>
+              </text>
+            </template>
+          </g>
         </g>
       </svg>
     </div>
@@ -31,102 +84,189 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, Ref, ref } from 'vue'
+import { nextTick, onMounted, Ref, ref, watch } from 'vue'
 import PublicTools from '@/components/publicTools/index.vue'
-import { Point } from '@/types/d3.types';
-import { addZoom, createLine, resetZoom } from '@/utils/d3.helper';
-import { downloadSvg, urlToBase64 } from '@/utils/public'
+import { Point, KeyPoint } from '@/types/d3.types';
+import { addDrag, addZoom, clearDrag, createLine, resetZoom } from '@/utils/d3.helper';
+import { downloadSvg } from '@/utils/public'
+import type { UploadProps, UploadRawFile } from 'element-plus';
+import { getKeyPoints } from '@/api/vto';
+import { line_UpFace, line_DownFace, line_Cheeks, line_UpTeeth, line_DownTeeth, line_Head, line_Head2, line_Eyes, line_Head3, line_Head4, line_Head5, controPoints} from "@/utils/vtoLines";
+import { calculationInitPoints } from '@/utils/vtoLineHelp';
 import * as d3 from 'd3';
+import { ZoomTransform } from 'd3'; 
 type LineType = {
     name: string;
     points: Point[];
+    pointsName: string[];
     lineString: string;
 }
+
 const zoomSelector = "#contentCavans"
 const transformSelector = "#contentCavans g"
-const width = 672;
-const height = 576;
+const width = ref(0);
+const height = ref(0);
 const imgFilter = ref("");
-const imgUrl = ref('/img/test.jpeg');
+const imgUrl = ref('');
+const allPoints = ref<KeyPoint[]>([]);
+const moveStart = ref<Point>([0,0]);
+const movePoint = ref<KeyPoint>();
+let zoomTransform:ZoomTransform;
 onMounted(() => {
-  console.log('mounted');
-  addZoom(zoomSelector, transformSelector);
-  drawLines();
-  urlToBase64(imgUrl.value).then(res=> {
-    imgUrl.value = res
-  })
+  addZoom(zoomSelector, transformSelector,(e)=> {
+    zoomTransform = e.transform;
+  });
 })
 console.log('setup');
 const showTools:Ref<string[]> = ref(['自动定点', '编辑模式', '测量', '校准','设置','面型对比','保存','还原','撤销','下载图像', 'vto模式', '融合模式', '原始大小']);
-let lineType: LineType[] = [
+let lineType = ref<LineType[]>([
   {
-    name: '下嘴唇',
-    points: [
-      [
-          482.83518139481544,
-          379.2620126560489
-      ],
-      [
-          495.16163317069413,
-          379.30558943875417
-      ],
-      [
-          502.9056580214202,
-          387.01158317021964
-      ],
-      [
-          501.2531385433674,
-          402.7821990546277
-      ],
-      [
-          488.39304922193287,
-          416.68266272546174
-      ],
-      [
-          487.7025205224752,
-          428.5700261928777
-      ],
-      [
-          490.51,
-          442.72
-      ],
-      [
-          492.0674243034609,
-          471.2782381226824
-      ],
-      [
-          477.2993831188977,
-          494.57099851285466
-      ],
-      [
-          444.74279822917657,
-          512.7882987016009
-      ]
-    ],
+    name: 'line_UpFace',
+    pointsName: line_UpFace,
+    points: [],
     lineString: ''
-  }
-]
-let lines: d3.Selection<SVGPathElement, LineType, SVGGElement, number[]>;
-function drawLines() {
-  lineType.forEach(i=> {
-    i.lineString = createLine(i.points)
-  })
-  console.log('lineType :>> ', lineType);
-  lines = d3.select<SVGGElement, number[]>('svg g.lines').selectAll<SVGPathElement, number[]>('path').data(lineType);
-  lines.enter().append('path').merge(lines).attr('d', (d)=> d.lineString).style('stroke', ()=> '#f00').style('fill', 'none')
+  },
+  {
+    name: 'line_DownFace',
+    pointsName: line_DownFace,
+    points: [],
+    lineString: ''
+  },
+  {
+    name: 'line_Cheeks',
+    pointsName: line_Cheeks,
+    points: [],
+    lineString: ''
+  },
+  {
+    name: 'line_UpTeeth',
+    pointsName: line_UpTeeth,
+    points: [],
+    lineString: ''
+  },
+  {
+    name: 'line_DownTeeth',
+    pointsName: line_DownTeeth,
+    points: [],
+    lineString: ''
+  },
+  {
+    name: 'line_Eyes',
+    pointsName: line_Eyes,
+    points: [],
+    lineString: ''
+  },
+  {
+    name: 'line_Head',
+    pointsName: line_Head,
+    points: [],
+    lineString: ''
+  },
+  {
+    name: 'line_Head2',
+    pointsName: line_Head2,
+    points: [],
+    lineString: ''
+  },
+  {
+    name: 'line_Head3',
+    pointsName: line_Head3,
+    points: [],
+    lineString: ''
+  },
+  {
+    name: 'line_Head4',
+    pointsName: line_Head4,
+    points: [],
+    lineString: ''
+  },
+  {
+    name: 'line_Head5',
+    pointsName: line_Head5,
+    points: [],
+    lineString: ''
+  },
+])
+const handleRest = () => {
+  resetZoom(zoomSelector,transformSelector, width.value, height.value);
 }
-function handleRest() {
-  resetZoom(zoomSelector,transformSelector, width, height);
-}
-function setFilter(filter: string) {
+const setFilter = (filter: string) => {
   imgFilter.value = filter;
 }
-function handledownload() {
-  downloadSvg(zoomSelector, width, height, 'test');
+const handledownload = () => {
+  downloadSvg(zoomSelector, width.value, height.value, 'test');
 }
-function handleSave() {
-  console.log('save');
+const uploadChange: UploadProps['onChange'] = (file) => {
+  const reader = new FileReader();
+  reader.readAsDataURL((file.raw as UploadRawFile))
+  reader.addEventListener('load', () => {
+    handleRest();
+    allPoints.value = [];
+    imgUrl.value = (reader.result as string);
+    const image = new Image();
+    image.src = imgUrl.value;
+    image.onload = () => {
+      width.value = image.width;
+      height.value = image.height;
+    }
+  })
 }
+const onGetKeyPoints = () => {
+  getKeyPoints(imgUrl.value).then(res=> {
+    allPoints.value = JSON.parse(res.data);
+    calculationInitPoints(new Date().toString(), allPoints.value)
+    allPoints.value.forEach(i => {
+      i.contro = controPoints.includes(i.landmark)
+    })
+  })
+}
+const onDrag = (type: "start" | "drag", e: any, d: KeyPoint) => {
+  if(type === "start") {
+    console.log('start :>> ', e, d);
+    moveStart.value = [e.sourceEvent.offsetX, e.sourceEvent.offsetY];
+    movePoint.value = JSON.parse(JSON.stringify(d))
+  }
+  if(type === 'drag') {
+    // console.log('e :>> ', e);
+    const moveEnd = [e.sourceEvent.offsetX, e.sourceEvent.offsetY];
+    console.log('moveStart :>> ', moveStart.value);
+    console.log('moveEnd :>> ', moveEnd);
+    // console.log('zoomTransform :>> ', zoomTransform);
+    // console.log('movePoint :>> ', movePoint);
+    const moveDistant = [(moveEnd[0] - moveStart.value[0]) / zoomTransform.k, (moveEnd[1] - moveStart.value[1]) / zoomTransform.k]
+    const point = allPoints.value.find(i=> i.landmark === movePoint.value?.landmark);
+    (point as KeyPoint).x = (movePoint.value as KeyPoint).x + moveDistant[0];
+    (point as KeyPoint).y = (movePoint.value as KeyPoint).y + moveDistant[1];
+    // console.log('move', e, d)
+  }
+}
+watch(
+  ()=> allPoints.value,
+  () => {
+    lineType.value.forEach(i=> {
+      i.points = []
+      i.pointsName.forEach(name => {
+        const findPoint = allPoints.value.find(item => item.landmark === name);
+        if(findPoint) {
+          i.points.push([findPoint.x, findPoint.y])
+        }
+      })
+      i.lineString = createLine(i.points);
+    })
+  },
+  {
+    deep: true,
+  }
+)
+watch(
+  () => allPoints.value.length,
+  () => {
+    clearDrag(".contro_points");
+    nextTick(() => {
+      addDrag(".contro_points", allPoints.value.filter(i => i.contro),onDrag)
+    })
+  }
+)
 </script>
 
 <style lang="scss" scoped>
@@ -138,7 +278,10 @@ function handleSave() {
   @apply flex items-center justify-center;
   overflow: overlay;
   box-shadow: none;
-  width:100%;
-  height:100%;
+  // width:100%;
+  // height:100%;
+}
+.dontshow {
+  font-size: 8px;
 }
 </style>

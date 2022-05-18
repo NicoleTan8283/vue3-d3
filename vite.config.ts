@@ -61,5 +61,14 @@ export default defineConfig({
   },
   build: {
     target: ["es2015"]
+  },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://192.168.1.12:5000',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, '')
+      }
+    }
   }
 })

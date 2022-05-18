@@ -1,5 +1,5 @@
 import * as d3 from 'd3';
-import { D3ZoomEvent, ZoomTransform } from 'd3';
+import {  D3ZoomEvent, ZoomTransform } from 'd3';
 import { Point } from '@/types/d3.types';
 /**
  * 对父元素添加缩放拖住监听，并设置子元素的tranform为对应的矩阵
@@ -43,7 +43,7 @@ export function resetZoom(select: string, zoomSelect: string, width = 0, height 
  */
 export function createLine(points: Point[]): string {
   const lineGenerator = d3.line();
-  const curve = d3.curveBundle.beta(0.5);
+  const curve = d3.curveCatmullRom.alpha(1);
   lineGenerator.curve(curve);
   return lineGenerator(points) || "";
 }
@@ -90,7 +90,11 @@ export function getTruePoint(point: Point, transform: ZoomTransform): Point {
   return [(point[0] - transform.x) / transform.k, (point[1] - transform.y) / transform.k]
 }
 
-
+/**
+ * 添加点击和移动事件，返回对应点位
+ * @param select 选择器
+ * @param callback 回调函数
+ */
 export function addClickAndMove(select: string,callback:(type: 'click' | 'move', points: Point) => void) {
   const selector = d3.select(select);
   selector.on('click', (event: MouseEvent)=> {
@@ -106,4 +110,25 @@ export function addClickAndMove(select: string,callback:(type: 'click' | 'move',
 export function clearDistace(select: string) {
   const selector = d3.select(select);
   selector.on('click', null).on('mousemove', null);
+}
+
+
+export function addDrag(select: string,data: any[], callback:(type: 'start' | 'drag', event: any, d: any) => void) {
+  const drag = d3.drag()
+  .on('start',(e, d)=> {
+    callback('start', e, d)
+    })
+	.on('drag', function(evnet, d) {
+    callback('drag', evnet, d)
+	})
+  const selector = d3.selectAll<Element, unknown>(select).data(data);
+  selector.call(drag)
+}
+
+export function clearDrag(select: string) {
+  const drag = d3.drag()
+  .on('start',null)
+	.on('drag', null)
+  const selector = d3.selectAll<Element, unknown>(select);
+  selector.call(drag)
 }
