@@ -1,6 +1,6 @@
 import * as d3 from 'd3';
 import {  D3ZoomEvent, ZoomTransform } from 'd3';
-import { Point } from '@/types/d3.types';
+import { KeyPoint, Point } from '@/types/d3.types';
 /**
  * 对父元素添加缩放拖住监听，并设置子元素的tranform为对应的矩阵
  * @param parentElement 缩放拖拽监听的父元素
@@ -27,11 +27,12 @@ export function addZoom<DataType>(parentElement: string, childElement: string, c
  * @param width 缩放的宽度，d3设置translateTo(0,0)是回到宽高的一半
  * @param height 缩放的高度，d3设置translateTo(0,0)是回到宽高的一半
  */
-export function resetZoom(select: string, zoomSelect: string, width = 0, height = 0) {
+export function resetZoom(select: string, zoomSelect: string, width = 0, height = 0, fWidth = 0, fHeight = 0) {
   const selector = d3.select<HTMLElement, unknown>(select);
   const zoomSelector = d3.select(zoomSelect);
   const zoom = d3.zoom<HTMLElement, unknown>();
-  zoom.scaleTo(selector, 1);
+  const scale = Math.min(fWidth / width, fHeight / height);
+  zoom.scaleTo(selector, scale);
   zoom.translateTo(selector, width / 2,height / 2);
   const transform = d3.zoomTransform(selector.node() as HTMLElement);
   zoomSelector.attr('transform',transform.toString())
@@ -48,21 +49,26 @@ export function createLine(points: Point[]): string {
   return lineGenerator(points) || "";
 }
 /**
- * 计算任意两直线的角度
+ * 计算任意两直线的角度,默认返回角度范围[0, 180]，若需返回360度的角度返回请传递参数range360,并且线的两个点位顺序为起始点，结束点
  * @param point1 直线1点1
  * @param point2 直线1点2
  * @param point3 直线2点1
  * @param point4 直线2点2
+ * @param range360 范围得角度范围是否为[0, 360]
  * @returns 返回两条直线相交的角度
  */
-export function getAngle(point1: Point, point2:Point, point3:Point, point4:Point): number {
+export function getAngle(point1: Point, point2:Point, point3:Point, point4:Point, range360 = false): number {
   const evA = [point2[0] - point1[0], point2[1] - point1[1]];
   const evALength = Math.sqrt(Math.pow(evA[0], 2) + Math.pow(evA[1], 2));
   const evB = [point4[0] - point3[0], point4[1] - point3[1]];
   const evBLength = Math.sqrt(Math.pow(evB[0], 2) + Math.pow(evB[1], 2));
   const dotProduct = evA[0] * evB[0] + evA[1] * evB[1];
   const angle = Math.acos(dotProduct / (evALength * evBLength)) * 180 / Math.PI;
-  return angle;
+  if(!range360) {
+    return angle;
+  } else {
+    return evA[0] * evB[1] - evA[1] * evB[0] > 0 ? angle : 360 - angle
+  }
 }
 
 /**
@@ -112,23 +118,46 @@ export function clearDistace(select: string) {
   selector.on('click', null).on('mousemove', null);
 }
 
-
-export function addDrag(select: string,data: any[], callback:(type: 'start' | 'drag', event: any, d: any) => void) {
+/**
+ * 给指定的选择器dom添加拖拽事件
+ * @param select 需要添加拖拽的选择器
+ * @param data 数据
+ * @param callback 回调函数
+ */
+export function addDrag(select: string,data: any[], callback:(type: 'start' | 'drag' | 'end', event: any, d: any) => void) {
+  
   const drag = d3.drag()
-  .on('start',(e, d)=> {
-    callback('start', e, d)
+  .on('start',(event, d)=> {
+    callback('start', event, d)
     })
-	.on('drag', function(evnet, d) {
-    callback('drag', evnet, d)
+	.on('drag', function(event, d) {
+    callback('drag', event, d)
 	})
+  .on('end', function(event ,d) {
+    callback('end', event, d)
+  })
   const selector = d3.selectAll<Element, unknown>(select).data(data);
+  console.log('addDrag', selector);
   selector.call(drag)
 }
 
+/**
+ * 清除拖拽
+ * @param select 清除drag的选择器
+ */
 export function clearDrag(select: string) {
   const drag = d3.drag()
   .on('start',null)
 	.on('drag', null)
   const selector = d3.selectAll<Element, unknown>(select);
   selector.call(drag)
+}
+/**
+ * 点运用矩阵变换
+ * @param point 点
+ * @param matrix 矩阵
+ */
+export function pointUseMatrix(point: Point, matrix: number[]): Point {
+  const transformPoint: Point = [matrix[0] * point[0] + matrix[2] * point[1] + matrix[4], matrix[1] * point[0] + matrix[3] * point[1] + matrix[5]]
+  return transformPoint
 }

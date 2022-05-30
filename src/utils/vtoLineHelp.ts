@@ -813,5 +813,49 @@ function estimate(domain: number[][], range: number[][]) {
    })
   }
 
+export function getOcclusalPlane(U6Distal: KeyPoint, U6Mesial: KeyPoint,L6Distal: KeyPoint,L6Mesial: KeyPoint, U1IncisalTip: KeyPoint, L1IncisalTip: KeyPoint): KeyPoint[] {
+  const molarsCenter:KeyPoint = {
+    x: (U6Distal.x + U6Mesial.x + L6Distal.x + L6Mesial.x) / 4,
+    y: (U6Distal.y + U6Mesial.y + L6Distal.y + L6Mesial.y) / 4,
+    landmark: 'molarsCenter'
+  }
+  const incisalTipCenter:KeyPoint = {
+    x: (U1IncisalTip.x + L1IncisalTip.x) / 2,
+    y: (U1IncisalTip.y + L1IncisalTip.y) / 2,
+    landmark: 'incisalTipCenter'
+  }
+  return [molarsCenter, incisalTipCenter]
+}
 
-  
+
+export function matrixAddMatrix(matrix: number[], matrix2: number[]) {
+  const newMatrix = [];
+  const a00 = matrix[0],
+    a01 = matrix[1],
+    a02 = matrix[2];
+  const a10 = matrix[3],
+    a11 = matrix[4],
+    a12 = matrix[5];
+  const a20 = matrix[6],
+    a21 = matrix[7],
+    a22 = matrix[8];
+  const b00 = matrix2[0],
+    b01 = matrix2[1],
+    b02 = matrix2[2];
+  const b10 = matrix2[3],
+    b11 = matrix2[4],
+    b12 = matrix2[5];
+  const b20 = matrix2[6],
+    b21 = matrix2[7],
+    b22 = matrix2[8];
+  newMatrix[0] = b00 * a00 + b01 * a10 + b02 * a20;
+  newMatrix[1] = b00 * a01 + b01 * a11 + b02 * a21;
+  newMatrix[2] = b00 * a02 + b01 * a12 + b02 * a22;
+  newMatrix[3] = b10 * a00 + b11 * a10 + b12 * a20;
+  newMatrix[4] = b10 * a01 + b11 * a11 + b12 * a21;
+  newMatrix[5] = b10 * a02 + b11 * a12 + b12 * a22;
+  newMatrix[6] = b20 * a00 + b21 * a10 + b22 * a20;
+  newMatrix[7] = b20 * a01 + b21 * a11 + b22 * a21;
+  newMatrix[8] = b20 * a02 + b21 * a12 + b22 * a22;
+  return newMatrix
+}
