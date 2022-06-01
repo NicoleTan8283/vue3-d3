@@ -126,11 +126,11 @@
                 v-for="item in allPoints"
               >
                 <circle
-                  v-if="item.contro"
+                  v-if="true"
                   :id="item.landmark"
                   :key="item.landmark"
                   class="contro_points"
-                  r="2"
+                  r="1"
                   :cx="item.x"
                   :cy="item.y"
                 />
@@ -142,7 +142,7 @@
                 <circle
                   :id="item.landmark"
                   class="contro_points"
-                  r="2"
+                  r="1"
                   :cx="item.x"
                   :cy="item.y"
                 />
@@ -524,7 +524,7 @@ watch(
   () => {
     clearDrag(".contro_points");
     nextTick(() => {
-      addDrag(".contro_points", allPoints.value.filter(i => i.contro),onDrag)
+      addDrag(".contro_points", allPoints.value,onDrag)
     })
   }
 )

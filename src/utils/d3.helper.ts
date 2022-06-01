@@ -1,6 +1,6 @@
 import * as d3 from 'd3';
 import {  D3ZoomEvent, ZoomTransform } from 'd3';
-import { KeyPoint, Point } from '@/types/d3.types';
+import { Point } from '@/types/d3.types';
 /**
  * 对父元素添加缩放拖住监听，并设置子元素的tranform为对应的矩阵
  * @param parentElement 缩放拖拽监听的父元素
@@ -44,7 +44,7 @@ export function resetZoom(select: string, zoomSelect: string, width = 0, height 
  */
 export function createLine(points: Point[]): string {
   const lineGenerator = d3.line();
-  const curve = d3.curveCatmullRom.alpha(1);
+  const curve = d3.curveNatural;
   lineGenerator.curve(curve);
   return lineGenerator(points) || "";
 }
