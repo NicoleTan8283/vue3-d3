@@ -42,9 +42,8 @@ export function resetZoom(select: string, zoomSelect: string, width = 0, height 
  * @param points 点位数组
  * @returns 返回线的path的d值
  */
-export function createLine(points: Point[]): string {
+export function createLine(points: Point[], curve:d3.CurveFactory | d3.CurveFactoryLineOnly = d3.curveNatural): string {
   const lineGenerator = d3.line();
-  const curve = d3.curveNatural;
   lineGenerator.curve(curve);
   return lineGenerator(points) || "";
 }

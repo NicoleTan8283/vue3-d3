@@ -45,8 +45,11 @@ export const controPoints = ['Or', 'Po', 'G1', 'SoftTissueNa', 'nasion', 'Na', '
 export const line_UpMolars = ['U6Distal', 'U6Mesial']
 export const line_DownMolars = ['L6Distal', 'L6Mesial']
 export const line_UpTooth = ['U1RootTip', 'U1IncisalTip']
+export const line_SVGUpTooth = ['U1RootTip', 'U1IncisalTip']
 export const line_DownTooth = ['L1RootTip', 'L1IncisalTip']
-
+export const upToothSvgRound = ["Ulsd","Ut_1","Ut_2","Ut_3","Ut_4","Ut_5","Ut_6","Ut_7","Ut_8","UtI","Ut_9","Ut_10","UFa","Ut_12","Ut_13","Ut_14","Ut_15","Ut_16","Ut_17","Ut_18","Utr","Ut_19","Ut_20","Ut_21","Ut_22",'Ulsd']
+export const upToothSvgCenter = ['Ubsd',"Utc_1","Utc_2","Utc_3","Utc_4","Ulsd"]
+export const lowToothSvg = ['Lbsd',"Ltc_1","Ltc_2","Ltc_3","Ltc_4","Llsd","Lt_1","Lt_2","Lt_3","Lt_4","Lt_5","Ltr","Lt_6","Lt_7","Lt_8","Lt_9","Lt_10","Lt_11","LFa","Lt_13","Lt_14","LtI", "Lt_15","Lt_16","Lt_17","Lt_18","Utr","Lt_19","Lt_20",'Lbsd']
 export const Teeth = [
   {
     id: 'upTooth',

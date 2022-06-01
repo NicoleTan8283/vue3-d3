@@ -38,7 +38,6 @@
             <g class="lines">
               <path
                 v-for="line in lineType"
-              
                 :id="line.name"
                 :key="line.name"
                 :d="line.lineString"
@@ -66,18 +65,30 @@
               v-if="allPoints.length"
               class="teeth"
             >
-              <path
-                v-for="tooth in teeth"
-                :id="tooth.id"
-                :key="tooth.id"
-                fill="#fff"
-                fill-opacity="0.2"
-                stroke="#ffffff"
-                stroke-opacity="0.8"
-                stroke-width="1"
-                :d="tooth.path"
-                :transform="tooth.matrix"
-              />
+              <template 
+                v-for="tooth in svgPath" 
+                :key="tooth.name"
+              >
+                <path
+                  :id="tooth.name +'round'"
+                  fill="#fff"
+                  fill-opacity="0.2"
+                  stroke="#ffffff"
+                  stroke-opacity="0.8"
+                  stroke-width="1"
+                  :d="tooth.roundPoint.dString"
+                  :transform="tooth.matrix"
+                />
+                <path
+                  :id="tooth.name +'center'"
+                  fill="none"
+                  stroke="#ffffff"
+                  stroke-opacity="0.8"
+                  stroke-width="1"
+                  :d="tooth.centerPoint.dString"
+                  :transform="tooth.matrix"
+                />
+              </template>
             </g>
             <g
               v-if="allPoints.length"
@@ -200,15 +211,32 @@ import { addDrag, addZoom, clearDrag, createLine, getAngle, pointUseMatrix, rese
 import { downloadSvg } from '@/utils/public'
 import type { UploadProps, UploadRawFile } from 'element-plus';
 import { getKeyPoints } from '@/api/vto';
-import { line_UpFace, line_DownFace, line_Cheeks, line_UpTeeth, line_DownTeeth, line_Head, line_Head2, line_Eyes, line_Head3, line_Head4, line_Head5, controPoints, Teeth} from "@/utils/vtoLines";
+import { line_UpFace, line_DownFace, line_Cheeks, line_UpTeeth, line_DownTeeth, line_Head, line_Head2, line_Eyes, line_Head3, line_Head4, line_Head5, controPoints, Teeth, upToothSvgRound, upToothSvgCenter, line_UpTooth, line_SVGUpTooth} from "@/utils/vtoLines";
 import { calculationInitPoints, getOcclusalPlane, matrixAddMatrix } from '@/utils/vtoLineHelp';
-import { ZoomTransform } from 'd3';
+import * as d3 from 'd3';
 import { Matrix } from '@/utils/matrix';
+import { lowtoothPoint, UptoothPoint } from '@/utils/tooth';
 type LineType = {
     name: string;
     points: Point[];
     pointsName: string[];
     lineString: string;
+}
+type toothSvgType = {
+    name: string;
+    roundPoint: {
+      names: string[]
+      dString: string
+    }
+    centerPoint: {
+      names: string[]
+      dString: string
+    }
+    positionPoint: {
+      AI: string[],
+      SVG: string[],
+    };
+    matrix: string;
 }
 const zoomSelector = "#contentCavans"
 const transformSelector = "#contentCavans g"
@@ -244,7 +272,7 @@ const movePoint = ref<KeyPoint>();
 const teeth = ref(Teeth);
 const teethOtherPoints = ref<KeyPoint[]>([]);
 const OcclusalPlanePoint = ref<KeyPoint[]>([])
-let zoomTransform:ZoomTransform;
+let zoomTransform:d3.ZoomTransform;
 onMounted(() => {
   addZoom(zoomSelector, transformSelector,(e)=> {
     zoomTransform = e.transform;
@@ -320,6 +348,24 @@ let lineType = ref<LineType[]>([
     lineString: ''
   },
 ])
+let svgPath = ref<toothSvgType[]>([
+  {
+    name: 'upToothSvg',
+    roundPoint: {
+      names: upToothSvgRound,
+      dString: ''
+    },
+    centerPoint: {
+      names: upToothSvgCenter,
+      dString: ''
+    },
+    positionPoint: {
+      AI: line_UpTooth,
+      SVG: line_SVGUpTooth,
+    },
+    matrix: '',
+  },
+])
 const handleRest = () => {
   const faterDom = document.querySelector('#toolContent')
   resetZoom(zoomSelector,transformSelector, width.value, height.value, (faterDom as HTMLDivElement).clientWidth, (faterDom as HTMLDivElement).clientHeight);
@@ -348,19 +394,7 @@ const uploadChange: UploadProps['onChange'] = (file) => {
     }
   })
 }
-const onGetKeyPoints = () => {
-  getKeyPoints(imgUrl.value).then(res=> {
-    allPoints.value = JSON.parse(res.data);
-    calculationInitPoints(new Date().toString(), allPoints.value)
-    allPoints.value.forEach(i => {
-      i.contro = controPoints.includes(i.landmark)
-    })
-    const ruler0 = allPoints.value.find(i => i.landmark === 'ruler0')
-    const ruler1 = allPoints.value.find(i => i.landmark === 'ruler1')
-    const rulerDistance = allPoints.value.find(i => i.landmark === "rulerdistance");
-    if(ruler0 && ruler1 && rulerDistance) {
-      unitVector.value = Number(rulerDistance.distance) / Math.sqrt(Math.pow(ruler1.x - ruler0.x, 2) + Math.pow(ruler1.y - ruler0.y, 2))
-    }
+const setOcc = () => {
     const U6Distal = allPoints.value.find(i => i.landmark === 'U6Distal')
     const U6Mesial = allPoints.value.find(i => i.landmark === 'U6Mesial')
     const L6Distal = allPoints.value.find(i => i.landmark === 'L6Distal')
@@ -370,6 +404,22 @@ const onGetKeyPoints = () => {
     if(U6Distal && U6Mesial && L6Distal && L6Mesial && U1IncisalTip && L1RootTip) {
       OcclusalPlanePoint.value = getOcclusalPlane(U6Distal,U6Mesial,L6Distal,L6Mesial,U1IncisalTip,L1RootTip)
     }
+}
+const onGetKeyPoints = () => {
+  getKeyPoints(imgUrl.value).then(res=> {
+    allPoints.value = JSON.parse(res.data);
+    calculationInitPoints(new Date().toString(), allPoints.value)
+    allPoints.value.push(...UptoothPoint, ...lowtoothPoint)
+    allPoints.value.forEach(i => {
+      i.contro = controPoints.includes(i.landmark)
+    })
+    const ruler0 = allPoints.value.find(i => i.landmark === 'ruler0')
+    const ruler1 = allPoints.value.find(i => i.landmark === 'ruler1')
+    const rulerDistance = allPoints.value.find(i => i.landmark === "rulerdistance");
+    if(ruler0 && ruler1 && rulerDistance) {
+      unitVector.value = Number(rulerDistance.distance) / Math.sqrt(Math.pow(ruler1.x - ruler0.x, 2) + Math.pow(ruler1.y - ruler0.y, 2))
+    }
+    setOcc();
     const Or = allPoints.value.find(i => i.landmark === 'Or')
     const Po = allPoints.value.find(i => i.landmark === 'Po')
     if(Or && Po) {
@@ -486,6 +536,24 @@ watch(
         }
       })
       i.lineString = createLine(i.points);
+    })
+    svgPath.value.forEach(i=> {
+      const roundPoints: Point[] = [];
+      const centerPoints: Point[] = [];
+      i.roundPoint.names.forEach(name => {
+        const findPoint = allPoints.value.find(item => item.landmark === name);
+        if(findPoint) {
+          roundPoints.push([findPoint.x, findPoint.y])
+        }
+      })
+      i.centerPoint.names.forEach(name => {
+        const findPoint = allPoints.value.find(item => item.landmark === name);
+        if(findPoint) {
+          centerPoints.push([findPoint.x, findPoint.y])
+        }
+      })
+      i.roundPoint.dString = createLine(roundPoints, d3.curveCatmullRom.alpha(1));
+      i.centerPoint.dString = createLine(centerPoints, d3.curveCatmullRom.alpha(1));
     })
     teethOtherPoints.value = [];
     teeth.value.forEach(tooth => {
