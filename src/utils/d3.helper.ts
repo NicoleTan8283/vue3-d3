@@ -1,6 +1,6 @@
 import * as d3 from 'd3';
 import {  D3ZoomEvent, ZoomTransform } from 'd3';
-import { Point } from '@/types/d3.types';
+import { KeyPoint, Point, PointZ } from '@/types/d3.types';
 /**
  * 对父元素添加缩放拖住监听，并设置子元素的tranform为对应的矩阵
  * @param parentElement 缩放拖拽监听的父元素
@@ -56,10 +56,10 @@ export function createLine(points: Point[], curve:d3.CurveFactory | d3.CurveFact
  * @param range360 范围得角度范围是否为[0, 360]
  * @returns 返回两条直线相交的角度
  */
-export function getAngle(point1: Point, point2:Point, point3:Point, point4:Point, range360 = false): number {
-  const evA = [point2[0] - point1[0], point2[1] - point1[1]];
+export function getAngle(point1: PointZ, point2:PointZ, point3:PointZ, point4:PointZ, range360 = false): number {
+  const evA = [point2.x - point1.x, point2.y - point1.y];
   const evALength = Math.sqrt(Math.pow(evA[0], 2) + Math.pow(evA[1], 2));
-  const evB = [point4[0] - point3[0], point4[1] - point3[1]];
+  const evB = [point4.x - point3.x, point4.y - point3.y];
   const evBLength = Math.sqrt(Math.pow(evB[0], 2) + Math.pow(evB[1], 2));
   const dotProduct = evA[0] * evB[0] + evA[1] * evB[1];
   const angle = Math.acos(dotProduct / (evALength * evBLength)) * 180 / Math.PI;
@@ -71,18 +71,15 @@ export function getAngle(point1: Point, point2:Point, point3:Point, point4:Point
 }
 
 /**
- * 传入两个点构成的线数组和两个点构成的标尺数据以及标尺长度计算线长度返回
+ * 传入两个点构成的线数组和两个点构成的标尺数据以及标尺长度计算线长度返回，如果不传入标尺长度则返回点位距离
  * @param line 两个点组成的线数组
  * @param ruler 标尺点数组
  * @param biaochi 标尺长度
  * @returns 线长度
  */
-export function getLineLength(line: [Point, Point], ruler: [Point, Point], biaochi: number) {
-  const evLine = [line[1][0] - line[0][0], line[1][1] - line[0][1]];
-  const evRuler = [ruler[1][0] - ruler[0][0], ruler[1][1] - ruler[0][1]];
-  const lineLength = Math.sqrt(Math.pow(evLine[0], 2) + Math.pow(evLine[1], 2));
-  const rulerLength = Math.sqrt(Math.pow(evRuler[0], 2) + Math.pow(evRuler[1], 2));
-  return lineLength / rulerLength * biaochi;
+export function getLineLength(point1: PointZ | KeyPoint, point2: PointZ | KeyPoint, biaochi?: number) {
+  const vectorLength = Math.sqrt(Math.pow(point2.x - point1.x, 2) + Math.pow(point2.y - point1.y, 2))
+  return biaochi ? vectorLength * biaochi : vectorLength;
 }
 
 /**
@@ -136,7 +133,6 @@ export function addDrag(select: string,data: any[], callback:(type: 'start' | 'd
     callback('end', event, d)
   })
   const selector = d3.selectAll<Element, unknown>(select).data(data);
-  console.log('addDrag', selector);
   selector.call(drag)
 }
 
@@ -156,7 +152,7 @@ export function clearDrag(select: string) {
  * @param point 点
  * @param matrix 矩阵
  */
-export function pointUseMatrix(point: Point, matrix: number[]): Point {
-  const transformPoint: Point = [matrix[0] * point[0] + matrix[2] * point[1] + matrix[4], matrix[1] * point[0] + matrix[3] * point[1] + matrix[5]]
+export function pointUseMatrix(point: PointZ | KeyPoint, matrix: number[]): PointZ {
+  const transformPoint: PointZ = {x:matrix[0] * point.x + matrix[2] * point.y + matrix[4], y: matrix[1] * point.x + matrix[3] * point.y + matrix[5]}
   return transformPoint
 }

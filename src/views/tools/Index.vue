@@ -77,7 +77,11 @@
                   stroke-opacity="0.8"
                   stroke-width="1"
                   :d="tooth.roundPoint.dString"
-                  :transform="tooth.matrix"
+                  :style="
+                    {
+                      transform: tooth.matrix.toString()
+                    }
+                  "
                 />
                 <path
                   :id="tooth.name +'center'"
@@ -86,7 +90,11 @@
                   stroke-opacity="0.8"
                   stroke-width="1"
                   :d="tooth.centerPoint.dString"
-                  :transform="tooth.matrix"
+                  :style="
+                    {
+                      transform: tooth.matrix.toString()
+                    }
+                  "
                 />
               </template>
             </g>
@@ -206,37 +214,21 @@
 import { computed, nextTick, onMounted, Ref, ref, watch } from 'vue'
 import PublicTools from '@/components/publicTools/index.vue'
 import Slider from '@/components/slider/index.vue'
-import { Point, KeyPoint } from '@/types/d3.types';
+import { Point, KeyPoint, toothSvgType } from '@/types/d3.types';
 import { addDrag, addZoom, clearDrag, createLine, getAngle, pointUseMatrix, resetZoom } from '@/utils/d3.helper';
-import { downloadSvg } from '@/utils/public'
+import { decimalAdjust, downloadSvg } from '@/utils/public'
 import type { UploadProps, UploadRawFile } from 'element-plus';
 import { getKeyPoints } from '@/api/vto';
-import { line_UpFace, line_DownFace, line_Cheeks, line_UpTeeth, line_DownTeeth, line_Head, line_Head2, line_Eyes, line_Head3, line_Head4, line_Head5, controPoints, Teeth, upToothSvgRound, upToothSvgCenter, line_UpTooth, line_SVGUpTooth} from "@/utils/vtoLines";
-import { calculationInitPoints, getOcclusalPlane, matrixAddMatrix } from '@/utils/vtoLineHelp';
+import { line_UpFace, line_DownFace, line_Cheeks, line_UpTeeth, line_DownTeeth, line_Head, line_Head2, line_Eyes, line_Head3, line_Head4, line_Head5, controPoints, Teeth, upToothSvgRound, upToothSvgCenter, line_UpTooth, line_SVGUpTooth, lowToothSvgCenter, lowToothSvgRound, line_DownTooth, line_SVGDownTooth} from "@/utils/vtoLines";
+import { calculationInitPoints, getOcclusalPlane, matrixMultplyMatrix } from '@/utils/vtoLineHelp';
 import * as d3 from 'd3';
 import { Matrix } from '@/utils/matrix';
-import { lowtoothPoint, UptoothPoint } from '@/utils/tooth';
+import { getToothMatrix, lowtoothPoint, UptoothPoint } from '@/utils/tooth';
 type LineType = {
     name: string;
     points: Point[];
     pointsName: string[];
     lineString: string;
-}
-type toothSvgType = {
-    name: string;
-    roundPoint: {
-      names: string[]
-      dString: string
-    }
-    centerPoint: {
-      names: string[]
-      dString: string
-    }
-    positionPoint: {
-      AI: string[],
-      SVG: string[],
-    };
-    matrix: string;
 }
 const zoomSelector = "#contentCavans"
 const transformSelector = "#contentCavans g"
@@ -363,7 +355,23 @@ let svgPath = ref<toothSvgType[]>([
       AI: line_UpTooth,
       SVG: line_SVGUpTooth,
     },
-    matrix: '',
+    matrix: new Matrix(),
+  },
+  {
+    name: 'lowToothSvg',
+    roundPoint: {
+      names: lowToothSvgRound,
+      dString: ''
+    },
+    centerPoint: {
+      names: lowToothSvgCenter,
+      dString: ''
+    },
+    positionPoint: {
+      AI: line_DownTooth,
+      SVG: line_SVGDownTooth,
+    },
+    matrix: new Matrix(),
   },
 ])
 const handleRest = () => {
@@ -407,12 +415,13 @@ const setOcc = () => {
 }
 const onGetKeyPoints = () => {
   getKeyPoints(imgUrl.value).then(res=> {
-    allPoints.value = JSON.parse(res.data);
-    calculationInitPoints(new Date().toString(), allPoints.value)
-    allPoints.value.push(...UptoothPoint, ...lowtoothPoint)
-    allPoints.value.forEach(i => {
+    const points: KeyPoint[] = JSON.parse(res.data)
+    calculationInitPoints(new Date().toString(), points)
+    points.push(...UptoothPoint, ...lowtoothPoint)
+    points.forEach((i:KeyPoint) => {
       i.contro = controPoints.includes(i.landmark)
     })
+    allPoints.value = points;
     const ruler0 = allPoints.value.find(i => i.landmark === 'ruler0')
     const ruler1 = allPoints.value.find(i => i.landmark === 'ruler1')
     const rulerDistance = allPoints.value.find(i => i.landmark === "rulerdistance");
@@ -423,15 +432,14 @@ const onGetKeyPoints = () => {
     const Or = allPoints.value.find(i => i.landmark === 'Or')
     const Po = allPoints.value.find(i => i.landmark === 'Po')
     if(Or && Po) {
-      FHAngle.value = Number(getAngle([0,0], [10,0], [Po.x, Po.y],[Or.x, Or.y],).toFixed(1))
+      FHAngle.value = Number(getAngle({x:0,y: 0}, {x:10,y:0}, Po, Or).toFixed(1))
     }
   })
 }
 const onDrag = (type: "start" | "drag" | 'end', e: any, d: KeyPoint) => {
   if(type === "start") {
-    console.log('start :>> ', e, d);
     moveStart.value = [e.sourceEvent.offsetX, e.sourceEvent.offsetY];
-    movePoint.value = JSON.parse(JSON.stringify(d))
+    movePoint.value = JSON.parse(JSON.stringify(allPoints.value.find(i=> i.landmark === d.landmark)))
   }
   if(type === 'drag') {
     const moveEnd = [e.sourceEvent.offsetX, e.sourceEvent.offsetY];
@@ -473,6 +481,35 @@ const toothMatrixs = computed(
     }
   },
 )
+const toothKeyPoint = ref<KeyPoint[]>([])
+watch(
+  () => toothKeyPoint.value,
+  (newValue, oldValue) => {
+    if(JSON.stringify(newValue) !== JSON.stringify(oldValue)) {
+      svgPath.value.forEach(svg=> {
+        svg.matrix = getToothMatrix(allPoints.value, svg.positionPoint.AI, svg.positionPoint.SVG);
+        const svgAllpoints = [...svg.roundPoint.names, ...svg.centerPoint.names]
+        const newAllPoints = allPoints.value.map(point => {
+          if(svgAllpoints.includes(point.landmark)) {
+            const newPoint = pointUseMatrix(point, svg.matrix.toMatrix());
+            return {
+              ...point,
+              x:decimalAdjust('round', newPoint.x, -4),
+              y:decimalAdjust('round', newPoint.y, -4),
+            }
+          }else {
+            return {
+              ...point
+            }
+          }
+        })
+        allPoints.value = newAllPoints
+      })
+    }
+  },{
+    deep: true
+  }
+)
 watch(
   () => teethTransform,
   (newValue) => {
@@ -504,8 +541,8 @@ watch(
       downTooth = downMatrix.toMatrix3()
       downEndTooth = downEndMatrix.toMatrix3()
       martix.setAngleBy(step, OcclusalPlanePoint.value[0].x, OcclusalPlanePoint.value[0].y)
-      let upToMatrix = matrixAddMatrix(martix.toMatrix3(), upTooth)
-      let downToMatrix = matrixAddMatrix(martix.toMatrix3(), downTooth)
+      let upToMatrix = matrixMultplyMatrix(martix.toMatrix3(), upTooth)
+      let downToMatrix = matrixMultplyMatrix(martix.toMatrix3(), downTooth)
       const upX = Number(((upToMatrix[6] - upEndTooth[6]) * unitVector.value).toFixed(4));
       const upY = Number(((upToMatrix[7] - upEndTooth[7]) * unitVector.value).toFixed(4));
       const downX = Number(((downToMatrix[6] - downEndTooth[6]) * unitVector.value).toFixed(4));
@@ -527,60 +564,53 @@ watch(
   ()=> allPoints.value,
   () => {
     if(allPoints.value.length) {
-    lineType.value.forEach(i=> {
-      i.points = []
-      i.pointsName.forEach(name => {
-        const findPoint = allPoints.value.find(item => item.landmark === name);
-        if(findPoint) {
-          i.points.push([findPoint.x, findPoint.y])
-        }
+      console.log('watch')
+      lineType.value.forEach(i=> {
+        i.points = []
+        i.pointsName.forEach(name => {
+          const findPoint = allPoints.value.find(item => item.landmark === name);
+          if(findPoint) {
+            i.points.push([findPoint.x, findPoint.y])
+          }
+        })
+        i.lineString = createLine(i.points);
       })
-      i.lineString = createLine(i.points);
-    })
-    svgPath.value.forEach(i=> {
-      const roundPoints: Point[] = [];
-      const centerPoints: Point[] = [];
-      i.roundPoint.names.forEach(name => {
-        const findPoint = allPoints.value.find(item => item.landmark === name);
-        if(findPoint) {
-          roundPoints.push([findPoint.x, findPoint.y])
-        }
-      })
-      i.centerPoint.names.forEach(name => {
-        const findPoint = allPoints.value.find(item => item.landmark === name);
-        if(findPoint) {
-          centerPoints.push([findPoint.x, findPoint.y])
-        }
-      })
-      i.roundPoint.dString = createLine(roundPoints, d3.curveCatmullRom.alpha(1));
-      i.centerPoint.dString = createLine(centerPoints, d3.curveCatmullRom.alpha(1));
-    })
-    teethOtherPoints.value = [];
-    teeth.value.forEach(tooth => {
-      const keypoint1 = allPoints.value.find(i => i.landmark === tooth.keyPoint[0]);
-      const keypoint2 = allPoints.value.find(i => i.landmark === tooth.keyPoint[1]);
-      const toothDistance = Math.sqrt(Math.pow(tooth.defaultPoint[1][0] - tooth.defaultPoint[0][0], 2) + Math.pow(tooth.defaultPoint[1][1] - tooth.defaultPoint[0][1], 2))
-      const pointDistance = Math.sqrt(Math.pow((keypoint2 as KeyPoint).x - (keypoint1 as KeyPoint).x, 2) + Math.pow((keypoint2 as KeyPoint).y - (keypoint1 as KeyPoint).y, 2))
-      const toothSc = pointDistance / toothDistance;
-      const angle = getAngle((tooth.defaultPoint[0] as Point), (tooth.defaultPoint[1] as Point), [(keypoint1 as KeyPoint)?.x, (keypoint1 as KeyPoint)?.y], [(keypoint2 as KeyPoint)?.x, (keypoint2 as KeyPoint)?.y], true)
-      const postionDistance = Math.sqrt(Math.pow(tooth.defaultPoint[0][0], 2) + Math.pow(tooth.defaultPoint[0][1], 2)) * toothSc;
-      const positionAngle = getAngle([0,0], [10, 0], [0,0], (tooth.defaultPoint[0] as Point)) + angle;
-      const positionX = Math.cos(positionAngle * Math.PI / 180) * postionDistance;
-      const positionY = Math.sin(positionAngle * Math.PI / 180) * postionDistance;
-      const matrix = new Matrix();
-      matrix.setScale(toothSc, toothSc);
-      matrix.setAngle(angle);
-      matrix.setPostion((keypoint1 as KeyPoint).x - positionX, (keypoint1 as KeyPoint).y - positionY);
-      tooth.otherPoint && tooth.otherPoint.forEach(i => {
-        const point = pointUseMatrix(i.point as Point, matrix.toMatrix())
-        teethOtherPoints.value.push({
-          x: point[0],
-          y: point[1],
-          landmark: i.landmark
+      const names = [];
+      const points: KeyPoint[] = [];
+      svgPath.value.forEach(svg => {
+        names.push(...svg.positionPoint.AI, ...svg.positionPoint.SVG)
+        svg.positionPoint.AI.forEach(aipoint =>{
+          const point = allPoints.value.find(i => i.landmark === aipoint);
+          if(point) {
+            points.push(point)
+          }
+        })
+        svg.positionPoint.SVG.forEach(aipoint =>{
+          const point = allPoints.value.find(i => i.landmark === aipoint)
+          if(point) {
+            points.push(point)
+          }
         })
       })
-      tooth.matrix = matrix.toString();
-    })
+      toothKeyPoint.value =JSON.parse(JSON.stringify(points))
+      svgPath.value.forEach(svg=> {
+        const roundPoints: Point[] = [];
+        const centerPoints: Point[] = [];
+        svg.roundPoint.names.forEach(name => {
+          const findPoint = allPoints.value.find(item => item.landmark === name);
+          if(findPoint) {
+            roundPoints.push([findPoint.x, findPoint.y])
+          }
+        })
+        svg.centerPoint.names.forEach(name => {
+          const findPoint = allPoints.value.find(item => item.landmark === name);
+          if(findPoint) {
+            centerPoints.push([findPoint.x, findPoint.y])
+          }
+        })
+        svg.roundPoint.dString = createLine(roundPoints, d3.curveCatmullRom.alpha(1));
+        svg.centerPoint.dString = createLine(centerPoints, d3.curveCatmullRom.alpha(1));
+      })
     }
   },
   {

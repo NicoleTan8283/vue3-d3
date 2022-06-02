@@ -1,4 +1,6 @@
-import { KeyPoint } from "@/types/d3.types";
+import { KeyPoint, toothSvgType } from "@/types/d3.types";
+import { getAngle, getLineLength } from "./d3.helper";
+import { Matrix } from "./matrix";
 
 export const UptoothPoint: KeyPoint[] = [
   {
@@ -72,8 +74,8 @@ export const UptoothPoint: KeyPoint[] = [
       "landmark": "Ut_8"
   },
   {
-      "x": 98.82907055772084,
-      "y": 170.82045494953675,
+      "x": 99,
+      "y": 171,
       "landmark": "UtI"
   },
   {
@@ -127,8 +129,8 @@ export const UptoothPoint: KeyPoint[] = [
       "landmark": "Ut_18"
   },
   {
-      "x": 16.467351807720842,
-      "y": 4.896283198685407,
+      "x": 16,
+      "y": 5,
       "landmark": "Utr"
   },
   {
@@ -291,3 +293,33 @@ export const lowtoothPoint: KeyPoint[] = [
       "landmark": "Lt_19"
   },
 ]
+
+
+export function getToothMatrix(allPoints: KeyPoint[], AIPoints: string[], ToothPoints: string[]): Matrix {
+  let matrix = new Matrix();
+  const AIpoint1 = allPoints.find(i => i.landmark === AIPoints[0]);
+  const AIpoint2 = allPoints.find(i => i.landmark === AIPoints[1]);
+  const ToothPoint1 = allPoints.find(i => i.landmark === ToothPoints[0]);
+  const ToothPoint2 = allPoints.find(i => i.landmark === ToothPoints[1]);
+  if(AIpoint1 && AIpoint2 && ToothPoint1 && ToothPoint2) {
+    const beforeMatrix = new Matrix().addPosition(-ToothPoint1.x, -ToothPoint1.y);
+    const afterMatrix = new Matrix().addPosition(AIpoint1.x, AIpoint1.y);
+    const toothDistance = getLineLength(ToothPoint1, ToothPoint2);
+    const pointDistance = getLineLength(AIpoint1, AIpoint2);
+    const toothSc = pointDistance / toothDistance;
+    const angle = getAngle(ToothPoint1, ToothPoint2, AIpoint1, AIpoint2, true)
+    const angleXtoKeyline = getAngle({x:0, y:0}, {x:1, y:0}, AIpoint1, AIpoint2, true)
+    if(angle) {
+      // const scaleMatrix = new Matrix().setScale(toothSc, toothSc);
+      const angleMatrix = new Matrix().setAngle(angle);
+      const angleByToxMatrix = new Matrix().setAngle(-angleXtoKeyline);
+      const angleByFromxMatrix = new Matrix().setAngle(angleXtoKeyline);
+      const scaleXMatrix = new Matrix().setScale(toothSc,1);
+      const scaleMatrix = new Matrix().MultplyMatrix(angleByToxMatrix).MultplyMatrix(scaleXMatrix).MultplyMatrix(angleByFromxMatrix);
+      // beforeMatrix.MultplyMatrix(scaleMatrix).MultplyMatrix(angleMatrix).MultplyMatrix(afterMatrix);
+      const lastMatrix = new Matrix().MultplyMatrix(beforeMatrix).MultplyMatrix(scaleMatrix).MultplyMatrix(angleMatrix).MultplyMatrix(afterMatrix)
+      matrix = lastMatrix
+    }
+  }
+  return matrix;
+}

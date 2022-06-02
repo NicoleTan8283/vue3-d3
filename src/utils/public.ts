@@ -52,3 +52,26 @@ export function urlToBase64(url: string): Promise<string> {
   })
   return base64Promise
 }
+
+/**
+ * Decimal adjustment of a number.
+ *
+ * @param {String}  type  The type of adjustment.
+ * @param {Number}  value The number.
+ * @param {Integer} exp   The exponent (the 10 logarithm of the adjustment base).
+ * @returns {Number} The adjusted value.
+ */
+export function decimalAdjust(type:'round'| 'floor'| 'ceil', value: number, exp:number): number {
+  value = +value;
+  exp = +exp;
+  // If the value is not a number or the exp is not an integer...
+  if (isNaN(value) || !(typeof exp === 'number' && exp % 1 === 0)) {
+    return NaN;
+  }
+  // Shift
+  let valueString = value.toString().split('e');
+  value = Math[type](+(valueString[0] + 'e' + (valueString[1] ? (+valueString[1] - exp) : -exp)));
+  // Shift back
+  valueString = value.toString().split('e');
+  return +(valueString[0] + 'e' + (valueString[1] ? (+valueString[1] + exp) : exp));
+}

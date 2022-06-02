@@ -488,29 +488,29 @@ export function calculationInitPoints(uuid: string, points: KeyPoint[]) {
        const l1r = point(points, 'L1RootTip')
        const l1i = point(points, 'L1IncisalTip')
 
-       const u1Points = []
-       u1Points.push({
-           landmark: 'U1Left',
-           x: teeth1_l.x,
-           y: teeth1_l.y,
-       })
-       u1Points.push({
-           landmark: 'U1Right',
-           x: teeth1_r.x,
-           y: teeth1_r.y,
-       })
+       const u1Points: KeyPoint[] = []
+      //  u1Points.push({
+      //      landmark: 'U1Left',
+      //      x: teeth1_l.x,
+      //      y: teeth1_l.y,
+      //  })
+      //  u1Points.push({
+      //      landmark: 'U1Right',
+      //      x: teeth1_r.x,
+      //      y: teeth1_r.y,
+      //  })
 
-       const l1Points = []
-       l1Points.push({
-           landmark: 'L1Left',
-           x: teeth2_l.x,
-           y: teeth2_l.y,
-       })
-       l1Points.push({
-           landmark: 'L1Right',
-           x: teeth2_r.x,
-           y: teeth2_r.y,
-       })
+       const l1Points:KeyPoint[] = []
+      //  l1Points.push({
+      //      landmark: 'L1Left',
+      //      x: teeth2_l.x,
+      //      y: teeth2_l.y,
+      //  })
+      //  l1Points.push({
+      //      landmark: 'L1Right',
+      //      x: teeth2_r.x,
+      //      y: teeth2_r.y,
+      //  })
 
        let tempu1l1
        const u1t = getTrans(teeth1_u, teeth1_d, u1i, u1r)
@@ -828,7 +828,7 @@ export function getOcclusalPlane(U6Distal: KeyPoint, U6Mesial: KeyPoint,L6Distal
 }
 
 
-export function matrixAddMatrix(matrix: number[], matrix2: number[]) {
+export function matrixMultplyMatrix(matrix: number[], matrix2: number[]) {
   const newMatrix = [];
   const a00 = matrix[0],
     a01 = matrix[1],
