@@ -1,6 +1,7 @@
 import * as d3 from 'd3';
 import {  D3ZoomEvent, ZoomTransform } from 'd3';
 import { KeyPoint, Point, PointZ } from '@/types/d3.types';
+import { mat3 } from 'gl-matrix';
 /**
  * 对父元素添加缩放拖住监听，并设置子元素的tranform为对应的矩阵
  * @param parentElement 缩放拖拽监听的父元素
@@ -152,7 +153,7 @@ export function clearDrag(select: string) {
  * @param point 点
  * @param matrix 矩阵
  */
-export function pointUseMatrix(point: PointZ | KeyPoint, matrix: number[]): PointZ {
-  const transformPoint: PointZ = {x:matrix[0] * point.x + matrix[2] * point.y + matrix[4], y: matrix[1] * point.x + matrix[3] * point.y + matrix[5]}
+export function pointUseMatrix(point: PointZ | KeyPoint, matrix: mat3): PointZ {
+  const transformPoint: PointZ = {x:matrix[0] * point.x + matrix[3] * point.y + matrix[6], y: matrix[1] * point.x + matrix[4] * point.y + matrix[7]}
   return transformPoint
 }

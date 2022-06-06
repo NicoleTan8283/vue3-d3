@@ -1,5 +1,6 @@
 import { KeyPoint, PointZ } from "@/types/d3.types"
 import { Transform } from "@/utils/transform";
+import { mat3, ReadonlyMat3 } from "gl-matrix";
 /**
 * 特征的初始化时计算一些划线用点
 */
@@ -828,8 +829,8 @@ export function getOcclusalPlane(U6Distal: KeyPoint, U6Mesial: KeyPoint,L6Distal
 }
 
 
-export function matrixMultplyMatrix(matrix: number[], matrix2: number[]) {
-  const newMatrix = [];
+export function matrixMultplyMatrix(matrix: ReadonlyMat3, matrix2: ReadonlyMat3): mat3 {
+  const newMatrix: mat3 = mat3.create();
   const a00 = matrix[0],
     a01 = matrix[1],
     a02 = matrix[2];

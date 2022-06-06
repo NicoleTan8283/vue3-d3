@@ -1,4 +1,4 @@
-import { Matrix } from "@/utils/matrix";
+import { mat3 } from "gl-matrix";
 
 export type Point = [number, number];
 export interface PointZ {
@@ -26,5 +26,5 @@ export type toothSvgType = {
     AI: string[],
     SVG: string[],
   };
-  matrix: Matrix;
+  matrix: mat3;
 }

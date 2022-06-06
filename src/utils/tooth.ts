@@ -1,7 +1,7 @@
 import { KeyPoint, toothSvgType } from "@/types/d3.types";
 import { getAngle, getLineLength } from "./d3.helper";
-import { Matrix } from "./matrix";
-
+import { mat3 } from 'gl-matrix'
+import { useMatrixs } from "./matrix";
 export const UptoothPoint: KeyPoint[] = [
   {
       "x": 95.40691584465425,
@@ -295,30 +295,37 @@ export const lowtoothPoint: KeyPoint[] = [
 ]
 
 
-export function getToothMatrix(allPoints: KeyPoint[], AIPoints: string[], ToothPoints: string[]): Matrix {
-  let matrix = new Matrix();
+export function getToothMatrix(allPoints: KeyPoint[], AIPoints: string[], ToothPoints: string[]): mat3 {
+  let matrix = mat3.create();
   const AIpoint1 = allPoints.find(i => i.landmark === AIPoints[0]);
   const AIpoint2 = allPoints.find(i => i.landmark === AIPoints[1]);
   const ToothPoint1 = allPoints.find(i => i.landmark === ToothPoints[0]);
   const ToothPoint2 = allPoints.find(i => i.landmark === ToothPoints[1]);
   if(AIpoint1 && AIpoint2 && ToothPoint1 && ToothPoint2) {
-    const beforeMatrix = new Matrix().addPosition(-ToothPoint1.x, -ToothPoint1.y);
-    const afterMatrix = new Matrix().addPosition(AIpoint1.x, AIpoint1.y);
+    // const beforeMatrix =  new Matrix().addPosition(-ToothPoint1.x, -ToothPoint1.y);
+    const beforeMatrix = mat3.translate(mat3.create(), mat3.create(), [-ToothPoint1.x, -ToothPoint1.y])
+    const afterMatrix = mat3.translate(mat3.create(), mat3.create(), [AIpoint1.x, AIpoint1.y])
+    console.log(beforeMatrix)
+    // console.log(afterMatrix)
     const toothDistance = getLineLength(ToothPoint1, ToothPoint2);
     const pointDistance = getLineLength(AIpoint1, AIpoint2);
     const toothSc = pointDistance / toothDistance;
     const angle = getAngle(ToothPoint1, ToothPoint2, AIpoint1, AIpoint2, true)
     // const angleXtoKeyline = getAngle({x:0, y:0}, {x:1, y:0}, AIpoint1, AIpoint2, true)
     if(angle) {
-      const scaleMatrix = new Matrix().setScale(toothSc, toothSc);
-      const angleMatrix = new Matrix().setAngle(angle);
+      const scaleMatrix = mat3.scale(mat3.create(), mat3.create(), [toothSc, toothSc]);
+      // console.log(scaleMatrix)
+      const angleMatrix = mat3.rotate(mat3.create(), mat3.create(), (angle * Math.PI) / 180);
+      console.log('angleMatrix :>> ', angleMatrix);
+      // console.log('angleMatrix :>> ', angleMatrix);
+      // const angleMatrix = new Matrix().setAngle(angle);
       // const angleByToxMatrix = new Matrix().setAngle(-angleXtoKeyline);
       // const angleByFromxMatrix = new Matrix().setAngle(angleXtoKeyline);
       // const scaleXMatrix = new Matrix().setScale(toothSc,toothSc);
       // const scaleMatrix = new Matrix().MultplyMatrix(angleByToxMatrix).MultplyMatrix(scaleXMatrix).MultplyMatrix(angleByFromxMatrix);
       // beforeMatrix.MultplyMatrix(scaleMatrix).MultplyMatrix(angleMatrix).MultplyMatrix(afterMatrix);
-      const lastMatrix = new Matrix().MultplyMatrix(beforeMatrix).MultplyMatrix(scaleMatrix).MultplyMatrix(angleMatrix).MultplyMatrix(afterMatrix)
-      matrix = lastMatrix
+      // const lastMatrix = new Matrix().MultplyMatrix(beforeMatrix).MultplyMatrix(scaleMatrix).MultplyMatrix(angleMatrix).MultplyMatrix(afterMatrix)
+      matrix = useMatrixs([beforeMatrix,scaleMatrix, angleMatrix,afterMatrix])
     }
   }
   return matrix;
