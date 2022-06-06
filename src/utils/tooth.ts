@@ -308,14 +308,14 @@ export function getToothMatrix(allPoints: KeyPoint[], AIPoints: string[], ToothP
     const pointDistance = getLineLength(AIpoint1, AIpoint2);
     const toothSc = pointDistance / toothDistance;
     const angle = getAngle(ToothPoint1, ToothPoint2, AIpoint1, AIpoint2, true)
-    const angleXtoKeyline = getAngle({x:0, y:0}, {x:1, y:0}, AIpoint1, AIpoint2, true)
+    // const angleXtoKeyline = getAngle({x:0, y:0}, {x:1, y:0}, AIpoint1, AIpoint2, true)
     if(angle) {
-      // const scaleMatrix = new Matrix().setScale(toothSc, toothSc);
+      const scaleMatrix = new Matrix().setScale(toothSc, toothSc);
       const angleMatrix = new Matrix().setAngle(angle);
-      const angleByToxMatrix = new Matrix().setAngle(-angleXtoKeyline);
-      const angleByFromxMatrix = new Matrix().setAngle(angleXtoKeyline);
-      const scaleXMatrix = new Matrix().setScale(toothSc,1);
-      const scaleMatrix = new Matrix().MultplyMatrix(angleByToxMatrix).MultplyMatrix(scaleXMatrix).MultplyMatrix(angleByFromxMatrix);
+      // const angleByToxMatrix = new Matrix().setAngle(-angleXtoKeyline);
+      // const angleByFromxMatrix = new Matrix().setAngle(angleXtoKeyline);
+      // const scaleXMatrix = new Matrix().setScale(toothSc,toothSc);
+      // const scaleMatrix = new Matrix().MultplyMatrix(angleByToxMatrix).MultplyMatrix(scaleXMatrix).MultplyMatrix(angleByFromxMatrix);
       // beforeMatrix.MultplyMatrix(scaleMatrix).MultplyMatrix(angleMatrix).MultplyMatrix(afterMatrix);
       const lastMatrix = new Matrix().MultplyMatrix(beforeMatrix).MultplyMatrix(scaleMatrix).MultplyMatrix(angleMatrix).MultplyMatrix(afterMatrix)
       matrix = lastMatrix

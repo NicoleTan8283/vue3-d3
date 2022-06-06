@@ -10,6 +10,7 @@ export interface KeyPoint extends PointZ {
   isActive?: boolean;
   distance?: number;
   contro?: boolean;
+  isKeyPoint?: boolean;
 }
 export type toothSvgType = {
   name: string;

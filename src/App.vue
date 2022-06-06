@@ -25,14 +25,4 @@ body {
   font-size: 12px;
 	user-select: none;
 }
-svg {
-	box-shadow: 0px 0px 40px -5px rgba(0,0,0,0.3);
-	border-radius: 5px;
-  position: relative;
-}
-svg circle {
-	fill: white;
-	stroke: #aaa;
-	cursor: move;
-}
 </style>
