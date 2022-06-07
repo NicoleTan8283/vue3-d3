@@ -316,7 +316,6 @@ export function getToothMatrix(allPoints: KeyPoint[], AIPoints: string[], ToothP
       const scaleMatrix = mat3.scale(mat3.create(), mat3.create(), [toothSc, toothSc]);
       // console.log(scaleMatrix)
       const angleMatrix = mat3.rotate(mat3.create(), mat3.create(), (angle * Math.PI) / 180);
-      console.log('angleMatrix :>> ', angleMatrix);
       // console.log('angleMatrix :>> ', angleMatrix);
       // const angleMatrix = new Matrix().setAngle(angle);
       // const angleByToxMatrix = new Matrix().setAngle(-angleXtoKeyline);

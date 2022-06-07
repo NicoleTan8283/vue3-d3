@@ -35,7 +35,10 @@
                 filter: imgFilter
               }"
             />
-            <g class="lines">
+            <g
+              v-if="allPoints.length"
+              class="lines"
+            >
               <path
                 v-for="line in lineType"
                 :id="line.name"
@@ -43,21 +46,19 @@
                 :d="line.lineString"
                 stroke="#ffffff"
                 stroke-opacity="0.8"
-                stroke-width="0.8"
                 fill="none"
               />
               <line
                 v-if="OcclusalPlanePoint.length"
                 :style="
                   {
-                    transform: toothMatrixs['咬合平面']
+                    transform: matrixToTransform(toothMatrixs['咬合平面'])
                   }
                 "
                 :x1="OcclusalPlanePoint[0].x"
                 :y1="OcclusalPlanePoint[0].y"
                 :x2="OcclusalPlanePoint[1].x"
                 :y2="OcclusalPlanePoint[1].y"
-                stroke-width="0.8"
                 stroke="#f00"
               />
               <ellipse
@@ -70,7 +71,6 @@
                 stroke-linecap="round"
                 stroke-opacity="0.8"
                 stroke="#ffffff"
-                stroke-width="0.8"
                 fill="none"
               />
             </g>
@@ -88,7 +88,6 @@
                   fill-opacity="0.2"
                   stroke="#ffffff"
                   stroke-opacity="0.8"
-                  stroke-width="1"
                   :d="tooth.roundPoint.dString"
                   :style="
                     {
@@ -101,7 +100,6 @@
                   fill="none"
                   stroke="#ffffff"
                   stroke-opacity="0.8"
-                  stroke-width="1"
                   :d="tooth.centerPoint.dString"
                   :style="
                     {
@@ -118,53 +116,64 @@
                 fill-opacity="0.2"
                 stroke="#ffffff"
                 stroke-opacity="0.8"
-                stroke-width="1"
                 :d="tooth.path"
                 :transform="tooth.matrix"
               />
             </g>
-            <!-- <g
+            <g
               v-if="allPoints.length"
               :id="teeth[0].id"
               :style="
                 {
-                  transform: toothMatrixs['上切牙']
+                  transform: matrixToTransform(toothMatrixs['上切牙'])
                 }
               "
             >
               <path
-                :id="teeth[0].id"
-                :key="teeth[0].id"
+                :id="svgPath[0].name +'round'"
                 fill="#f00"
-                fill-opacity="0.4"
+                fill-opacity="0.2"
                 stroke="#f00"
-                stroke-opacity="1"
+                stroke-opacity="0.8"
                 stroke-width="1"
-                :d="teeth[0].path"
-                :transform="teeth[0].matrix"
+                :d="svgPath[0].roundPoint.dString"
               />
-            </g> -->
-            <!-- <g
+              <path
+                :id="svgPath[0].name +'center'"
+                fill="none"
+                stroke="#f00"
+                stroke-opacity="0.8"
+                stroke-width="1"
+                :d="svgPath[0].centerPoint.dString"
+              />
+            </g>
+            <g
               v-if="allPoints.length"
               :id="teeth[1].id"
               :style="
                 {
-                  transform: toothMatrixs['下切牙']
+                  transform: matrixToTransform(toothMatrixs['下切牙'])
                 }
               "
             >
               <path
-                :id="teeth[1].id"
-                :key="teeth[1].id"
+                :id="svgPath[1].name +'round'"
                 fill="#f00"
-                fill-opacity="0.4"
+                fill-opacity="0.2"
                 stroke="#f00"
-                stroke-opacity="1"
+                stroke-opacity="0.8"
                 stroke-width="1"
-                :d="teeth[1].path"
-                :transform="teeth[1].matrix"
+                :d="svgPath[1].roundPoint.dString"
               />
-            </g> -->
+              <path
+                :id="svgPath[1].name +'center'"
+                fill="none"
+                stroke="#f00"
+                stroke-opacity="0.8"
+                stroke-width="1"
+                :d="svgPath[1].centerPoint.dString"
+              />
+            </g>
             <g class="points">
               <template 
                 v-for="item in allPoints"
@@ -239,10 +248,10 @@ import { addDrag, addZoom, clearDrag, createLine, getAngle, pointUseMatrix, rese
 import { decimalAdjust, downloadSvg } from '@/utils/public'
 import type { UploadProps, UploadRawFile } from 'element-plus';
 import { getKeyPoints } from '@/api/vto';
-import { line_UpFace, line_DownFace, line_Cheeks, line_UpTeeth, line_DownTeeth, KeyPoints, line_Head, line_Head2, line_Eyes,line_Ruler, line_Head3, line_Head4, line_Head5, controPoints, Teeth, upToothSvgRound, upToothSvgCenter, line_UpTooth, line_SVGUpTooth, lowToothSvgCenter, lowToothSvgRound, line_DownTooth, line_SVGDownTooth} from "@/utils/vtoLines";
+import { line_UpFace, line_DownFace, line_Cheeks, line_UpTeeth, line_DownTeeth, KeyPoints, line_Head, line_Head2, line_Eyes,line_Ruler, line_Head3, line_Head4, line_Head5, controPoints, Teeth, upToothSvgRound, upToothSvgCenter, line_UpTooth, line_SVGUpTooth, lowToothSvgCenter, lowToothSvgRound, line_DownTooth, line_SVGDownTooth, line_UpTeeth2, line_UpTeeth3} from "@/utils/vtoLines";
 import { calculationInitPoints, getOcclusalPlane, matrixMultplyMatrix } from '@/utils/vtoLineHelp';
 import * as d3 from 'd3';
-import { matrixToTransform, useMatrixs } from '@/utils/matrix';
+import { matrixToTransform, rotateByPoint, useMatrixs } from '@/utils/matrix';
 import { getToothMatrix, lowtoothPoint, UptoothPoint } from '@/utils/tooth';
 import { mat3 } from 'gl-matrix'
 import * as _ from 'lodash'
@@ -290,6 +299,9 @@ let zoomTransform:d3.ZoomTransform;
 onMounted(() => {
   addZoom(zoomSelector, transformSelector,(e)=> {
     zoomTransform = e.transform;
+    const g = d3.select(transformSelector);
+    const strokeWidth = width.value > 2000 ? 2.5: 1;
+    g.style('stroke-width', strokeWidth / Math.sqrt(zoomTransform.k))
   });
 })
 console.log('setup');
@@ -316,6 +328,18 @@ let lineType = ref<LineType[]>([
   {
     name: 'line_UpTeeth',
     pointsName: line_UpTeeth,
+    points: [],
+    lineString: ''
+  },
+  {
+    name: 'line_UpTeeth2',
+    pointsName: line_UpTeeth2,
+    points: [],
+    lineString: ''
+  },
+  {
+    name: 'line_UpTeeth3',
+    pointsName: line_UpTeeth3,
     points: [],
     lineString: ''
   },
@@ -405,6 +429,12 @@ let svgPath = ref<toothSvgType[]>([
 const handleRest = () => {
   const faterDom = document.querySelector('#toolContent')
   resetZoom(zoomSelector,transformSelector, width.value, height.value, (faterDom as HTMLDivElement).clientWidth, (faterDom as HTMLDivElement).clientHeight);
+  const selector = d3.select<HTMLElement, unknown>(zoomSelector);
+  const transform = d3.zoomTransform(selector.node() as HTMLElement);
+  const g = d3.select(transformSelector);
+  const strokeWidth = width.value > 2000 ? 2.5: 1;
+  console.log('zoom')
+  g.style('stroke-width', strokeWidth / Math.sqrt(transform.k))
 }
 const setFilter = (filter: string) => {
   imgFilter.value = filter;
@@ -491,7 +521,7 @@ const onDrag = (type: "start" | "drag" | 'end', e: any, d: KeyPoint) => {
       const point = allPoints.value.find(i=> i.landmark === movePoint.value?.landmark);
       (point as KeyPoint).x = (movePoint.value as KeyPoint).x + moveDistant[0];
       (point as KeyPoint).y = (movePoint.value as KeyPoint).y + moveDistant[1];
-    }, 1000 / 60)()
+    }, 1000 / 90)()
   }
   if(type === 'end') {
     const toothAIPoint = svgPath.value.map(i => i.positionPoint.AI).flat(1)
@@ -509,7 +539,6 @@ const useToothMatrix = () => {
     const newAllPoints = allPoints.value.map(point => {
       if(svgAllpoints.includes(point.landmark)) {
         const newPoint = pointUseMatrix(point, svg.matrix);
-        console.log(newPoint)
         return {
           ...point,
           x:decimalAdjust('round', newPoint.x, -4),
@@ -533,33 +562,31 @@ const controPointsValue = computed(
 )
 const toothMatrixs = computed(
   () => {
-    const upMatrix = mat3.create();
-    // const upToothPoint = allPoints.value.find(i => i.landmark === 'U1IncisalTip');
-    // let upTooth;
-    // if(upToothPoint){
-    //   upMatrix.setAngleBy(teethTransform.value['上切牙'].angle, upToothPoint.x, upToothPoint.y)
-    //   upMatrix.addPosition(teethTransform.value['上切牙'].horizontal / unitVector.value, teethTransform.value['上切牙'].vertrical / unitVector.value)
-    //   upTooth = upMatrix.toString()
-    // }
-    const downMatrix = mat3.create();
-    // const downToothPoint = allPoints.value.find(i => i.landmark === 'L1IncisalTip');
-    // let downTooth;
-    // if(downToothPoint){
-    //   downMatrix.setAngleBy(teethTransform.value['下切牙'].angle, downToothPoint.x, downToothPoint.y)
-    //   downMatrix.addPosition(teethTransform.value['下切牙'].horizontal / unitVector.value, teethTransform.value['下切牙'].vertrical / unitVector.value)
-    //   downTooth = downMatrix.toString()
-    // }
-    const occMatrix = mat3.create();
-    // let occ;
-    // if(OcclusalPlanePoint.value[0]){
-    //   occMatrix.setAngleBy(teethTransform.value['咬合平面'].angle, OcclusalPlanePoint.value[0].x, OcclusalPlanePoint.value[0].y)
-    //   occMatrix.addPosition(teethTransform.value['咬合平面'].horizontal / unitVector.value, teethTransform.value['咬合平面'].vertrical / unitVector.value)
-    //   occ = occMatrix.toString()
-    // }
+    let upMatrix = mat3.create();
+    const upToothPoint = allPoints.value.find(i => i.landmark === 'U1IncisalTip');
+    if(upToothPoint){
+      const roateMatrix = rotateByPoint(teethTransform.value['上切牙'].angle, [upToothPoint.x, upToothPoint.y])
+      const translateMatrix = mat3.translate(mat3.create(),mat3.create(),[teethTransform.value['上切牙'].horizontal / unitVector.value, teethTransform.value['上切牙'].vertrical / unitVector.value])
+      upMatrix = useMatrixs([roateMatrix,translateMatrix])
+    }
+    let downMatrix = mat3.create();
+    const downToothPoint = allPoints.value.find(i => i.landmark === 'L1IncisalTip');
+    console.log(downToothPoint)
+    if(downToothPoint){
+      const roateMatrix = rotateByPoint(teethTransform.value['下切牙'].angle, [downToothPoint.x, downToothPoint.y])
+      const translateMatrix = mat3.translate(mat3.create(),mat3.create(),[teethTransform.value['下切牙'].horizontal / unitVector.value, teethTransform.value['下切牙'].vertrical / unitVector.value])
+      downMatrix = useMatrixs([roateMatrix,translateMatrix])
+    }
+    let occMatrix = mat3.create();
+    if(OcclusalPlanePoint.value[0]){
+      const roateMatrix = rotateByPoint(teethTransform.value['咬合平面'].angle, [OcclusalPlanePoint.value[0].x, OcclusalPlanePoint.value[0].y])
+      const translateMatrix = mat3.translate(mat3.create(),mat3.create(),[teethTransform.value['咬合平面'].horizontal / unitVector.value, teethTransform.value['咬合平面'].vertrical / unitVector.value])
+      occMatrix = useMatrixs([roateMatrix,translateMatrix])
+    }
     return {
-      '上切牙': matrixToTransform(upMatrix),
-      '下切牙': matrixToTransform(downMatrix),
-      '咬合平面': matrixToTransform(occMatrix)
+      '上切牙': upMatrix,
+      '下切牙': downMatrix,
+      '咬合平面': occMatrix
     }
   },
 )
@@ -618,48 +645,44 @@ watch(
 watch(
   () => teethTransform,
   (newValue) => {
-    // const newAngle = newValue.value['咬合平面'].angle
-    // if(newAngle !== oldAngle.value) {
-    //   const step = newAngle - oldAngle.value;
-    //   const martix = new Matrix();
-    //   const upMatrix = new Matrix();
-    //   const downMatrix = new Matrix();
-    //   const upEndMatrix = new Matrix();
-    //   const downEndMatrix = new Matrix();
-    //   const upToothPoint = allPoints.value.find(i => i.landmark === 'U1IncisalTip');
-    //   const downToothPoint = allPoints.value.find(i => i.landmark === 'L1IncisalTip');
-    //   let upTooth, downTooth, upEndTooth, downEndTooth;
-    //   if(upToothPoint){
-    //     upMatrix.setAngleBy(teethTransform.value['上切牙'].angle, upToothPoint.x, upToothPoint.y)
-    //     upMatrix.addPosition(teethTransform.value['上切牙'].horizontal / unitVector.value, teethTransform.value['上切牙'].vertrical / unitVector.value)
-    //     upEndMatrix.setAngleBy(teethTransform.value['上切牙'].angle + step, upToothPoint.x, upToothPoint.y)
-    //     upEndMatrix.addPosition(teethTransform.value['上切牙'].horizontal / unitVector.value, teethTransform.value['上切牙'].vertrical / unitVector.value)
-    //   }
-    //   if(downToothPoint){
-    //     downMatrix.setAngleBy(teethTransform.value['下切牙'].angle, downToothPoint.x, downToothPoint.y)
-    //     downMatrix.addPosition(teethTransform.value['下切牙'].horizontal / unitVector.value, teethTransform.value['下切牙'].vertrical / unitVector.value)
-    //     downEndMatrix.setAngleBy(teethTransform.value['下切牙'].angle + step, downToothPoint.x, downToothPoint.y)
-    //     downEndMatrix.addPosition(teethTransform.value['下切牙'].horizontal / unitVector.value, teethTransform.value['下切牙'].vertrical / unitVector.value)
-    //   }
-    //   upTooth = upMatrix.toMatrix3()
-    //   upEndTooth = upEndMatrix.toMatrix3()
-    //   downTooth = downMatrix.toMatrix3()
-    //   downEndTooth = downEndMatrix.toMatrix3()
-    //   martix.setAngleBy(step, OcclusalPlanePoint.value[0].x, OcclusalPlanePoint.value[0].y)
-    //   let upToMatrix = matrixMultplyMatrix(martix.toMatrix3(), upTooth)
-    //   let downToMatrix = matrixMultplyMatrix(martix.toMatrix3(), downTooth)
-    //   const upX = Number(((upToMatrix[6] - upEndTooth[6]) * unitVector.value).toFixed(4));
-    //   const upY = Number(((upToMatrix[7] - upEndTooth[7]) * unitVector.value).toFixed(4));
-    //   const downX = Number(((downToMatrix[6] - downEndTooth[6]) * unitVector.value).toFixed(4));
-    //   const downY = Number(((downToMatrix[7] - downEndTooth[7]) * unitVector.value).toFixed(4));
-    //   teethTransform.value['上切牙'].angle += step;
-    //   teethTransform.value['上切牙'].horizontal += upX;
-    //   teethTransform.value['上切牙'].vertrical += upY;
-    //   teethTransform.value['下切牙'].angle += step;
-    //   teethTransform.value['下切牙'].horizontal += downX;
-    //   teethTransform.value['下切牙'].vertrical += downY;
-    //   oldAngle.value = newValue.value['咬合平面'].angle
-    // }
+    const newAngle = newValue.value['咬合平面'].angle
+    if(newAngle !== oldAngle.value) {
+      const step = newAngle - oldAngle.value;
+      let martix = mat3.create();
+      let upEndMatrix = mat3.create();
+      let downEndMatrix = mat3.create();
+      const upToothPoint = allPoints.value.find(i => i.landmark === 'U1IncisalTip');
+      const downToothPoint = allPoints.value.find(i => i.landmark === 'L1IncisalTip');
+      let upTooth, downTooth, upEndTooth, downEndTooth;
+      if(upToothPoint){
+        const roateMatrix = rotateByPoint(teethTransform.value['上切牙'].angle + step, [upToothPoint.x, upToothPoint.y])
+        const translateMatrix = mat3.translate(mat3.create(),mat3.create(),[teethTransform.value['上切牙'].horizontal / unitVector.value, teethTransform.value['上切牙'].vertrical / unitVector.value])
+        upEndMatrix = useMatrixs([roateMatrix,translateMatrix])
+      }
+      if(downToothPoint){
+        const roateMatrix = rotateByPoint(teethTransform.value['下切牙'].angle + step, [downToothPoint.x, downToothPoint.y])
+        const translateMatrix = mat3.translate(mat3.create(),mat3.create(),[teethTransform.value['下切牙'].horizontal / unitVector.value, teethTransform.value['下切牙'].vertrical / unitVector.value])
+        downEndMatrix = useMatrixs([roateMatrix,translateMatrix])
+      }
+      upTooth = toothMatrixs.value['上切牙']
+      upEndTooth = upEndMatrix
+      downTooth = toothMatrixs.value['下切牙']
+      downEndTooth = downEndMatrix
+      martix = rotateByPoint(step, [OcclusalPlanePoint.value[0].x, OcclusalPlanePoint.value[0].y])
+      let upToMatrix = matrixMultplyMatrix(martix, upTooth)
+      let downToMatrix = matrixMultplyMatrix(martix, downTooth)
+      const upX = Number(((upToMatrix[6] - upEndTooth[6]) * unitVector.value).toFixed(4));
+      const upY = Number(((upToMatrix[7] - upEndTooth[7]) * unitVector.value).toFixed(4));
+      const downX = Number(((downToMatrix[6] - downEndTooth[6]) * unitVector.value).toFixed(4));
+      const downY = Number(((downToMatrix[7] - downEndTooth[7]) * unitVector.value).toFixed(4));
+      teethTransform.value['上切牙'].angle += step;
+      teethTransform.value['上切牙'].horizontal += upX;
+      teethTransform.value['上切牙'].vertrical += upY;
+      teethTransform.value['下切牙'].angle += step;
+      teethTransform.value['下切牙'].horizontal += downX;
+      teethTransform.value['下切牙'].vertrical += downY;
+      oldAngle.value = newValue.value['咬合平面'].angle
+    }
   },
   {
     deep: true
@@ -668,7 +691,6 @@ watch(
 watch(
   ()=> allPoints.value,
   () => {
-    console.log(allPoints.value.filter(point => point.contro === true))
     if(allPoints.value.length) {
       teeth.value.forEach(tooth => {
         const keypoint1 = allPoints.value.find(i => i.landmark === tooth.keyPoint[0]);

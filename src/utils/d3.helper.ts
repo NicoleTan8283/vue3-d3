@@ -17,7 +17,6 @@ export function addZoom<DataType>(parentElement: string, childElement: string, c
       callback(e)
     }
     g.attr('transform', transform.toString());
-    g.style('stroke-width', 2 / Math.sqrt(transform.k))
   });
   svg.call(zoom).call(zoom.transform, d3.zoomIdentity);
 }

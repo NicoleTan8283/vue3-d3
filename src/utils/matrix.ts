@@ -5,7 +5,6 @@ export function useMatrixs(matrixs: ReadonlyMat3[]) {
   let outMatrix: mat3 = mat3.create();
   matrixs.forEach(matrix => {
     outMatrix = matrixMultplyMatrix(matrix, outMatrix)
-    console.log('outMatrix :>> ', outMatrix);
   })
   return outMatrix;
 }
@@ -17,7 +16,7 @@ export function matrixToTransform(matrix: ReadonlyMat3) {
 
 export function rotateByPoint(rad: number, v: ReadonlyVec2) {
   const beforeMoveMatrix = mat3.translate(mat3.create(), mat3.create(), [-v[0], -v[1]])
-  const rotateMatrix = mat3.rotate(mat3.create(), beforeMoveMatrix, (rad * Math.PI) / 180);
-  const afterMoveMatrix = mat3.translate(mat3.create(), rotateMatrix, v);
-  return afterMoveMatrix;
+  const rotateMatrix = mat3.rotate(mat3.create(), mat3.create(), (rad * Math.PI) / 180);
+  const afterMoveMatrix = mat3.translate(mat3.create(), mat3.create(), v);
+  return useMatrixs([beforeMoveMatrix,rotateMatrix,afterMoveMatrix]);
 }

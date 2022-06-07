@@ -55,7 +55,27 @@ export function calculationInitPoints(uuid: string, points: KeyPoint[]) {
        editorPoints(points, 'Or1', Or1[0], Or1[1])
        editorPoints(points, 'Or2', Or2[0], Or2[1])
    }
+   //计算 下颚骨辅助点
+   if (arrayObjectIndexOf(points, 'Go9', 'landmark') == -1) {
+    const R3_def = { x: 319.24, y: 284.81 }
+    const R1_def = { x: 358.6, y: 347.17 }
+    const Go9_def = { x: 354.6191793784488, y: 272.4616713981528 }
+    const Go8_def = { x: 389.9983587568976, y: 260.1133427963057 }
+    const Go7_def = { x: 374.2991793784488, y: 303.6416713981529 }
 
+    const R3P = point(points, 'R3')
+    const R1P = point(points, 'R1')
+
+    const eyeTrans = getTrans(R3_def, R1_def, R3P, R1P)
+    const Go9 = eyeTrans.transform([Go9_def.x, Go9_def.y])
+    const Go8 = eyeTrans.transform([Go8_def.x, Go8_def.y])
+    const Go7 = eyeTrans.transform([Go7_def.x, Go7_def.y])
+
+    editorPoints(points, 'Go9', Go9[0], Go9[1])
+    editorPoints(points, 'Go8', Go8[0], Go8[1])
+    editorPoints(points, 'Go7', Go7[0], Go7[1])
+    console.log('points :>> ', points);
+}
    function usePointsTransOw(def1: PointZ, def2: PointZ, point1: PointZ, point2: PointZ, points3: KeyPoint[]) {
        usePointsTrans(def1, def2, point1, point2, points3, points)
        // let tempanspns,
