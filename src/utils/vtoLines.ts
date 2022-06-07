@@ -54,7 +54,7 @@ export const line_Ruler = ['ruler0', 'ruler1']
 export const controPoints = ['Or', 'R3','Go9',
 'Go8',
 'Go7', 'R1', 'Po', 'G1', 'SoftTissueNa', 'nasion', 'Na', 'Skull1', 'U1RootTip', 'U1IncisalTip', 'L1RootTip', 'L1IncisalTip', 'L6Distal', 'L6Mesial', 'U6Distal', 'U6Mesial']
-export const KeyPoints = [...line_Ruler, 'Ubsd', 'Ulsd','G', 'Na', 'SoftTissueNa','NasalBridgePoint', 'Prn', 'Columella','ANS', 'Subnasale', 'B', 'SoftTissueB', 'A', 'SoftTissueA', 'S', 'Po', 'Pog', 'SoftTissuePog']
+export const KeyPoints = [...line_Ruler, 'Ubsd', 'Ulsd','Llsd', 'Lbsd','G', 'Na', 'SoftTissueNa','NasalBridgePoint', 'Prn', 'Columella','ANS', 'Subnasale', 'B', 'SoftTissueB', 'A', 'SoftTissueA', 'S', 'Po', 'Pog', 'SoftTissuePog']
 // 用于确定牙齿姿态
 export const line_UpMolars = ['U6Distal', 'U6Mesial']
 export const line_DownMolars = ['L6Distal', 'L6Mesial']
@@ -62,7 +62,7 @@ export const line_UpTooth = ['U1RootTip', 'U1IncisalTip']
 export const line_SVGUpTooth = ['Utr', 'UtI']
 export const line_DownTooth = ['L1RootTip', 'L1IncisalTip']
 export const line_SVGDownTooth = ['Ltr', 'LtI']
-export const upToothSvgRound = ["Ulsd","Ut_1","Ut_2","Ut_3","Ut_4","Ut_5","Ut_6","Ut_7","Ut_8","UtI","Ut_9","Ut_10","UFa","Ut_12","Ut_13","Ut_14","Ut_15","Ut_16","Ut_17","Ut_18","Utr","Ut_19","Ut_20","Ut_21","Ut_22",'Ulsd']
+export const upToothSvgRound = ["Ulsd","Ut_1","Ut_2","Ut_3","Ut_4","Ut_5","Ut_6","Ut_7","Ut_8","UtI","Ut_9","Ut_10","UFa","Ut_12","Ut_13", "Ubsd","Ut_14","Ut_15","Ut_16","Ut_17","Ut_18","Utr","Ut_19","Ut_20","Ut_21","Ut_22",'Ulsd']
 export const upToothSvgCenter = ['Ubsd',"Utc_1","Utc_2","Utc_3","Utc_4","Ulsd"]
 export const lowToothSvgRound = ["Llsd","Lt_1","Lt_2","Lt_3","Lt_4","Lt_5","Ltr","Lt_6","Lt_7","Lt_8","Lt_9","Lt_10","Lt_11","LFa","Lt_13","Lt_14","LtI", "Lt_15","Lt_16","Lt_17","Lt_18","Lt_19","Lt_20",'Llsd']
 export const lowToothSvgCenter = ['Lbsd',"Ltc_1","Ltc_2","Ltc_3","Ltc_4","Llsd"]

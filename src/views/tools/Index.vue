@@ -26,6 +26,7 @@
             {
               width,
               height,
+              transform: `rotate(${FHAngle}deg)`
             }"
         >
           <g>
@@ -36,7 +37,7 @@
               }"
             />
             <g
-              v-if="allPoints.length"
+              v-if="allPoints.length && showInfo.outline"
               class="lines"
             >
               <path
@@ -75,7 +76,7 @@
               />
             </g>
             <g
-              v-if="allPoints.length"
+              v-if="allPoints.length && showInfo.outline"
               class="teeth"
             >
               <template 
@@ -121,7 +122,7 @@
               />
             </g>
             <g
-              v-if="allPoints.length"
+              v-if="allPoints.length && false"
               :id="teeth[0].id"
               :style="
                 {
@@ -148,7 +149,7 @@
               />
             </g>
             <g
-              v-if="allPoints.length"
+              v-if="allPoints.length && false"
               :id="teeth[1].id"
               :style="
                 {
@@ -177,11 +178,11 @@
             <g class="points">
               <template 
                 v-for="item in allPoints"
+                :key="item.landmark"
               >
                 <circle
-                  v-if="item.contro"
+                  v-if="item.contro && showInfo.point"
                   :id="item.landmark"
-                  :key="item.landmark"
                   class="contro_points"
                   r="1"
                   :cx="item.x"
@@ -190,7 +191,49 @@
                   :stroke="item.isKeyPoint ? '#f00' : '#aaa'"
                   :style="
                     {
-                      cursor: 'pointer'
+                      cursor: showInfo.edit ? 'pointer' : 'auto'
+                    }
+                  "
+                />
+                <template v-else-if="item.isKeyPoint">
+                  <circle
+                    v-if="showInfo.keyPoint"
+                    :id="item.landmark"
+                    class="contro_points"
+                    r="1"
+                    :cx="item.x"
+                    :cy="item.y"
+                    :fill="'#f00'"
+                    :stroke="'#f00'"
+                    :style="
+                      {
+                        cursor: showInfo.edit ? 'pointer' : 'auto'
+                      }
+                    "
+                  />
+                  <text
+                    v-if="showInfo.pointName"
+                    :id="item.landmark"
+                    :x="item.x + 10"
+                    :y="item.y + 10"
+                    :fill="'#f00'"
+                    class="text"
+                  >
+                    {{ item.landmark }}
+                  </text>
+                </template>
+                <circle
+                  v-else-if="item.toothPoint && showInfo.toothPoint"
+                  :id="item.landmark"
+                  class="contro_points"
+                  r="1"
+                  :cx="item.x"
+                  :cy="item.y"
+                  :fill="item.isKeyPoint ? '#f00' : '#aaa'"
+                  :stroke="item.isKeyPoint ? '#f00' : '#aaa'"
+                  :style="
+                    {
+                      cursor: showInfo.edit ? 'pointer' : 'auto'
                     }
                   "
                 />
@@ -198,6 +241,16 @@
             </g>
           </g>
         </svg>
+        <LateralTools
+          class="absolute right-0 top-0"
+          :edit="showInfo.edit"
+          :outline="showInfo.outline"
+          :key-point="showInfo.keyPoint"
+          :text="showInfo.pointName"
+          :point="showInfo.point"
+          :tooth="showInfo.toothPoint"
+          @change-active="onChangeView"
+        />
       </div>
       <div class="setting">
         <div class="title">
@@ -242,6 +295,7 @@
 <script lang="ts" setup>
 import { computed, nextTick, onMounted, Ref, ref, watch } from 'vue'
 import PublicTools from '@/components/publicTools/index.vue'
+import LateralTools from '@/components/lateralTools/index.vue'
 import Slider from '@/components/slider/index.vue'
 import { Point, KeyPoint, toothSvgType } from '@/types/d3.types';
 import { addDrag, addZoom, clearDrag, createLine, getAngle, pointUseMatrix, resetZoom } from '@/utils/d3.helper';
@@ -263,6 +317,14 @@ type LineType = {
 }
 const zoomSelector = "#contentCavans"
 const transformSelector = "#contentCavans g"
+const showInfo = ref({
+  'edit': false,
+  'outline': true,
+  'keyPoint': true,
+  'pointName': false,
+  'point': false,
+  'toothPoint': false,
+})
 const width = ref(0);
 const height = ref(0);
 const imgFilter = ref("");
@@ -305,7 +367,7 @@ onMounted(() => {
   });
 })
 console.log('setup');
-const showTools:Ref<string[]> = ref(['自动定点', '编辑模式', '测量', '校准','设置','面型对比','保存','还原','撤销','下载图像', 'vto模式', '融合模式', '原始大小']);
+const showTools:Ref<string[]> = ref(['自动定点', '下载图像', '原始大小']);
 let lineType = ref<LineType[]>([
   {
     name: 'line_UpFace',
@@ -426,6 +488,11 @@ let svgPath = ref<toothSvgType[]>([
     matrix: mat3.create(),
   },
 ])
+const onChangeView = (key: 'outline' | 'keyPoint' | 'pointName' | 'point' | 'toothPoint' | 'edit', value: boolean) => {
+  if(key in showInfo.value) {
+    showInfo.value[key] = value;
+  }
+}
 const handleRest = () => {
   const faterDom = document.querySelector('#toolContent')
   resetZoom(zoomSelector,transformSelector, width.value, height.value, (faterDom as HTMLDivElement).clientWidth, (faterDom as HTMLDivElement).clientHeight);
@@ -481,12 +548,11 @@ const computedDistance = () => {
 }
 const onGetKeyPoints = () => {
   getKeyPoints(imgUrl.value).then(res=> {
-    console.log(JSON.parse(res.data))
     const points: KeyPoint[] = JSON.parse(res.data)
     calculationInitPoints(new Date().toString(), points)
     points.push(...UptoothPoint, ...lowtoothPoint)
     points.forEach((i:KeyPoint) => {
-      i.contro = controPoints.includes(i.landmark) || KeyPoints.includes(i.landmark)
+      i.contro = controPoints.includes(i.landmark)
       i.isKeyPoint = KeyPoints.includes(i.landmark)
     })
     
@@ -556,8 +622,13 @@ const useToothMatrix = () => {
 }
 const controPointsValue = computed(
   () => {
-    const points = JSON.parse(JSON.stringify(allPoints.value.filter(point => point.contro === true)))
-    return points
+    if(showInfo.value.edit) {
+      let points = JSON.parse(JSON.stringify(allPoints.value))
+      points = points.filter((i: KeyPoint) => (i.contro && showInfo.value['point']) || (i.isKeyPoint && showInfo.value['keyPoint']) || (i.toothPoint && showInfo.value['toothPoint']))
+      return points
+    } else {
+      return []
+    }
   }
 )
 const toothMatrixs = computed(
@@ -763,9 +834,8 @@ watch(
   }
 )
 watch(
-  () => controPointsValue.value,
+  () => controPointsValue.value.length,
   () => {
-    console.log('watch')
     clearDrag(".contro_points");
     nextTick(() => {
       addDrag(".contro_points", controPointsValue.value,onDrag)
@@ -776,7 +846,7 @@ watch(
 
 <style lang="scss" scoped>
 .tool-content {
-  @apply w-full overflow-hidden flex-1 flex justify-center items-center;
+  @apply w-full overflow-hidden flex-1 flex justify-center items-center relative bg-gray-50;
   height: calc(100vh - 100px);
 }
 .setting {
