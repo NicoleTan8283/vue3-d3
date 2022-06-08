@@ -122,7 +122,7 @@
               />
             </g>
             <g
-              v-if="allPoints.length && false"
+              v-if="allPoints.length && showInfo.target"
               :id="teeth[0].id"
               :style="
                 {
@@ -149,7 +149,7 @@
               />
             </g>
             <g
-              v-if="allPoints.length && false"
+              v-if="allPoints.length && showInfo.target"
               :id="teeth[1].id"
               :style="
                 {
@@ -324,6 +324,7 @@ const showInfo = ref({
   'pointName': false,
   'point': false,
   'toothPoint': false,
+  'target': false,
 })
 const width = ref(0);
 const height = ref(0);
@@ -488,7 +489,7 @@ let svgPath = ref<toothSvgType[]>([
     matrix: mat3.create(),
   },
 ])
-const onChangeView = (key: 'outline' | 'keyPoint' | 'pointName' | 'point' | 'toothPoint' | 'edit', value: boolean) => {
+const onChangeView = (key: 'outline' | 'keyPoint' | 'pointName' | 'point' | 'toothPoint' | 'edit' | 'target', value: boolean) => {
   if(key in showInfo.value) {
     showInfo.value[key] = value;
   }

@@ -85,6 +85,12 @@ const tools = ref<Tool[]>([
     active: false,
   },
   {
+    name: '目标位',
+    icon: 'target',
+    emit: 'target',
+    active: false,
+  },
+  {
     name: '颜色',
     icon: 'color',
     emit: '',
@@ -110,8 +116,12 @@ const changeValue = (name: string, value: boolean) => {
 const onClickTool = (tool: Tool) => {
   if(tool.name !=='颜色') {
     changeValue(tool.name, !tool.active)
-  } else {
+  } else if(tool.name === '颜色') {
     console.log('click color')
+  }
+  // 禁止编辑和目标位同时开启
+  if(tool.name === '目标位' || tool.name === '编辑') {
+    changeValue(tool.name === '目标位' ? '编辑' : '目标位', false)
   }
 }
 </script>
