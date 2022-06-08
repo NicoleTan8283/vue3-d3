@@ -1,7 +1,7 @@
-import { KeyPoint, toothSvgType } from "@/types/d3.types";
+import { KeyPoint, PointZ, toothSvgType } from "@/types/d3.types";
 import { getAngle, getLineLength } from "./d3.helper";
 import { mat3 } from 'gl-matrix'
-import { useMatrixs } from "./matrix";
+import { rotateByPoint, useMatrixs } from "./matrix";
 export const UptoothPoint: KeyPoint[] = [
   {
       "x": 95.40691584465425,
@@ -381,4 +381,28 @@ export function getToothMatrix(allPoints: KeyPoint[], AIPoints: string[], ToothP
     }
   }
   return matrix;
+}
+
+/**
+ * 传入目标位牙齿数据，和咬合平面角度，返回设置参数后的矩阵
+ * @param center 旋转中心点
+ * @param toothAngle 旋转角度
+ * @param horizontal 水平偏移
+ * @param vertrical 垂直偏移
+ * @param occAngle 咬合平面角度
+ * @param unit 向量单位
+ */
+
+export function computedTargetMatrix(center: PointZ | KeyPoint, toothAngle: number, horizontal: number, vertrical: number, occAngle: number, unit = 1): mat3 {
+  const sin = Math.sin(occAngle * Math.PI / 180);
+  const cos = Math.cos(occAngle * Math.PI / 180);
+  const xR = horizontal / unit;
+  const horizontalX = cos * xR
+  const horizontalY = sin * xR
+  const yR = vertrical / unit;
+  const vertricalX = sin * yR
+  const vertricalY = cos * yR
+  const roateMatrix = rotateByPoint(toothAngle, [center.x, center.y])
+  const translateMatrix = mat3.translate(mat3.create(),mat3.create(),[horizontalX + vertricalX, horizontalY + vertricalY])
+  return useMatrixs([roateMatrix,translateMatrix])
 }

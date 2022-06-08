@@ -14,9 +14,9 @@
         :model-value="modelValue"
         class="slider"
         :show-tooltip="false"
-        :max="10"
-        :min="-10"
-        :step="0.1"
+        :max="max"
+        :min="min"
+        :step="step"
         @input="onChangeValue"
       />
       <el-button

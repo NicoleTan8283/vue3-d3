@@ -2,6 +2,7 @@ import * as d3 from 'd3';
 import {  D3ZoomEvent, ZoomTransform } from 'd3';
 import { KeyPoint, Point, PointZ } from '@/types/d3.types';
 import { mat3 } from 'gl-matrix';
+import { decimalAdjust } from './public';
 /**
  * 对父元素添加缩放拖住监听，并设置子元素的tranform为对应的矩阵
  * @param parentElement 缩放拖拽监听的父元素
@@ -151,8 +152,12 @@ export function clearDrag(select: string) {
  * 点运用矩阵变换
  * @param point 点
  * @param matrix 矩阵
+ * @param precision 数据精度
  */
-export function pointUseMatrix(point: PointZ | KeyPoint, matrix: mat3): PointZ {
-  const transformPoint: PointZ = {x:matrix[0] * point.x + matrix[3] * point.y + matrix[6], y: matrix[1] * point.x + matrix[4] * point.y + matrix[7]}
-  return transformPoint
+export function pointUseMatrix<T extends PointZ | KeyPoint>(point: T, matrix: mat3, Precision = -4): T {
+  return {
+    ...point,
+    x: decimalAdjust('round', matrix[0] * point.x + matrix[3] * point.y + matrix[6], Precision),
+    y: decimalAdjust('round', matrix[1] * point.x + matrix[4] * point.y + matrix[7], Precision)
+  }
 }

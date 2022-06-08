@@ -51,11 +51,6 @@
               />
               <line
                 v-if="OcclusalPlanePoint.length"
-                :style="
-                  {
-                    transform: matrixToTransform(toothMatrixs['咬合平面'])
-                  }
-                "
                 :x1="OcclusalPlanePoint[0].x"
                 :y1="OcclusalPlanePoint[0].y"
                 :x2="OcclusalPlanePoint[1].x"
@@ -270,16 +265,22 @@
             v-model="teethTransform[activeTeeth].horizontal"
             title="水平："
             unit-text="mm"
+            :max="50"
+            :min="-50"
           />
           <Slider
             v-model="teethTransform[activeTeeth].vertrical"
             title="垂直："
             unit-text="mm"
+            :max="50"
+            :min="-50"
           />
           <Slider
             v-model="teethTransform[activeTeeth].angle"
             title="角度："
             unit-text="度"
+            :max="30"
+            :min="-30"
           />
           <Slider
             v-model="FHAngle"
@@ -306,7 +307,7 @@ import { line_UpFace, line_DownFace, line_Cheeks, line_UpTeeth, line_DownTeeth, 
 import { calculationInitPoints, getOcclusalPlane, matrixMultplyMatrix } from '@/utils/vtoLineHelp';
 import * as d3 from 'd3';
 import { matrixToTransform, rotateByPoint, useMatrixs } from '@/utils/matrix';
-import { getToothMatrix, lowtoothPoint, UptoothPoint } from '@/utils/tooth';
+import { computedTargetMatrix, getToothMatrix, lowtoothPoint, UptoothPoint } from '@/utils/tooth';
 import { mat3 } from 'gl-matrix'
 import * as _ from 'lodash'
 type LineType = {
@@ -332,7 +333,11 @@ const imgFilter = ref("");
 const FHAngle = ref(0);
 const activeTeeth = ref<'上切牙' | '下切牙'| '咬合平面'>("上切牙");
 const unitVector = ref(0);
-const oldAngle = ref(0);
+const occOldValue = ref({
+  angle: 0,
+  horizontal: 0,
+  vertrical:0
+});
 const teethTransform = ref({
   '上切牙': {
     id: '上切牙',
@@ -568,7 +573,8 @@ const onGetKeyPoints = () => {
     const Or = allPoints.value.find(i => i.landmark === 'Or')
     const Po = allPoints.value.find(i => i.landmark === 'Po')
     if(Or && Po) {
-      FHAngle.value = Number(getAngle({x:0,y: 0}, {x:10,y:0}, Po, Or).toFixed(1))
+      const angle = Number(getAngle( Po, Or, {x:0,y: 0}, {x:10,y:0},  true).toFixed(1))
+      FHAngle.value = angle > 180 ? 360 - angle : angle
     }
     nextTick(
       () => {
@@ -636,30 +642,21 @@ const controPointsValue = computed(
 const toothMatrixs = computed(
   () => {
     let upMatrix = mat3.create();
+    const occAngle = getAngle( OcclusalPlanePoint.value[0], OcclusalPlanePoint.value[1], {x:0,y:0}, {x:1, y:0})
     const upToothPoint = allPoints.value.find(i => i.landmark === 'U1IncisalTip');
     if(upToothPoint){
-      const roateMatrix = rotateByPoint(teethTransform.value['上切牙'].angle, [upToothPoint.x, upToothPoint.y])
-      const translateMatrix = mat3.translate(mat3.create(),mat3.create(),[teethTransform.value['上切牙'].horizontal / unitVector.value, teethTransform.value['上切牙'].vertrical / unitVector.value])
-      upMatrix = useMatrixs([roateMatrix,translateMatrix])
+      const { angle, horizontal, vertrical } = teethTransform.value['上切牙']
+      upMatrix = computedTargetMatrix(upToothPoint, angle, horizontal, vertrical, occAngle ,unitVector.value)
     }
     let downMatrix = mat3.create();
     const downToothPoint = allPoints.value.find(i => i.landmark === 'L1IncisalTip');
-    console.log(downToothPoint)
     if(downToothPoint){
-      const roateMatrix = rotateByPoint(teethTransform.value['下切牙'].angle, [downToothPoint.x, downToothPoint.y])
-      const translateMatrix = mat3.translate(mat3.create(),mat3.create(),[teethTransform.value['下切牙'].horizontal / unitVector.value, teethTransform.value['下切牙'].vertrical / unitVector.value])
-      downMatrix = useMatrixs([roateMatrix,translateMatrix])
-    }
-    let occMatrix = mat3.create();
-    if(OcclusalPlanePoint.value[0]){
-      const roateMatrix = rotateByPoint(teethTransform.value['咬合平面'].angle, [OcclusalPlanePoint.value[0].x, OcclusalPlanePoint.value[0].y])
-      const translateMatrix = mat3.translate(mat3.create(),mat3.create(),[teethTransform.value['咬合平面'].horizontal / unitVector.value, teethTransform.value['咬合平面'].vertrical / unitVector.value])
-      occMatrix = useMatrixs([roateMatrix,translateMatrix])
+      const { angle, horizontal, vertrical } = teethTransform.value['下切牙']
+      downMatrix = computedTargetMatrix(downToothPoint, angle, horizontal, vertrical, angle ,unitVector.value )
     }
     return {
       '上切牙': upMatrix,
-      '下切牙': downMatrix,
-      '咬合平面': occMatrix
+      '下切牙': downMatrix
     }
   },
 )
@@ -688,27 +685,9 @@ watch(
   (newValue, oldValue) => {
     if(JSON.stringify(newValue) !== JSON.stringify(oldValue)) {
       svgPath.value.forEach(svg=> {
-        console.time('a')
         svg.matrix = getToothMatrix(allPoints.value, svg.positionPoint.AI, svg.positionPoint.SVG);
         console.log(matrixToTransform(svg.matrix))
         console.log(svg.matrix)
-        console.timeEnd('a')
-        // const svgAllpoints = [...svg.roundPoint.names, ...svg.centerPoint.names]
-        // const newAllPoints = allPoints.value.map(point => {
-        //   if(svgAllpoints.includes(point.landmark)) {
-        //     const newPoint = pointUseMatrix(point, svg.matrix.toMatrix());
-        //     return {
-        //       ...point,
-        //       x:decimalAdjust('round', newPoint.x, -4),
-        //       y:decimalAdjust('round', newPoint.y, -4),
-        //     }
-        //   }else {
-        //     return {
-        //       ...point
-        //     }
-        //   }
-        // })
-        // allPoints.value = newAllPoints
       })
     }
   },{
@@ -719,9 +698,12 @@ watch(
   () => teethTransform,
   (newValue) => {
     const newAngle = newValue.value['咬合平面'].angle
-    if(newAngle !== oldAngle.value) {
-      const step = newAngle - oldAngle.value;
-      let martix = mat3.create();
+    const newHorizontal = newValue.value['咬合平面'].horizontal
+    const newVertrical = newValue.value['咬合平面'].vertrical
+    let occMatrix;
+    if(newAngle !== occOldValue.value.angle) {
+      const step = newAngle - occOldValue.value.angle;
+      let matrix = mat3.create();
       let upEndMatrix = mat3.create();
       let downEndMatrix = mat3.create();
       const upToothPoint = allPoints.value.find(i => i.landmark === 'U1IncisalTip');
@@ -741,9 +723,9 @@ watch(
       upEndTooth = upEndMatrix
       downTooth = toothMatrixs.value['下切牙']
       downEndTooth = downEndMatrix
-      martix = rotateByPoint(step, [OcclusalPlanePoint.value[0].x, OcclusalPlanePoint.value[0].y])
-      let upToMatrix = matrixMultplyMatrix(martix, upTooth)
-      let downToMatrix = matrixMultplyMatrix(martix, downTooth)
+      matrix = rotateByPoint(step, [OcclusalPlanePoint.value[0].x, OcclusalPlanePoint.value[0].y])
+      let upToMatrix = matrixMultplyMatrix(matrix, upTooth)
+      let downToMatrix = matrixMultplyMatrix(matrix, downTooth)
       const upX = Number(((upToMatrix[6] - upEndTooth[6]) * unitVector.value).toFixed(4));
       const upY = Number(((upToMatrix[7] - upEndTooth[7]) * unitVector.value).toFixed(4));
       const downX = Number(((downToMatrix[6] - downEndTooth[6]) * unitVector.value).toFixed(4));
@@ -754,8 +736,23 @@ watch(
       teethTransform.value['下切牙'].angle += step;
       teethTransform.value['下切牙'].horizontal += downX;
       teethTransform.value['下切牙'].vertrical += downY;
-      oldAngle.value = newValue.value['咬合平面'].angle
+      occOldValue.value.angle = newValue.value['咬合平面'].angle
+      occMatrix = matrix;
+    } else {
+      const horizontalStep = newHorizontal - occOldValue.value.horizontal;
+      const vertricalStep = newVertrical - occOldValue.value.vertrical;
+      teethTransform.value['上切牙'].horizontal += horizontalStep;
+      teethTransform.value['下切牙'].horizontal += horizontalStep;
+      teethTransform.value['上切牙'].vertrical += vertricalStep;
+      teethTransform.value['下切牙'].vertrical += vertricalStep;
+      occOldValue.value.horizontal = newHorizontal
+      occOldValue.value.vertrical = newVertrical
+      const occAngle = getAngle( OcclusalPlanePoint.value[0], OcclusalPlanePoint.value[1], {x:0,y:0}, {x:1, y:0})
+      occMatrix = computedTargetMatrix(OcclusalPlanePoint.value[0], 0, horizontalStep, vertricalStep, occAngle ,unitVector.value)
     }
+    
+    OcclusalPlanePoint.value[0] = pointUseMatrix<KeyPoint>(OcclusalPlanePoint.value[0], occMatrix)
+    OcclusalPlanePoint.value[1] = pointUseMatrix<KeyPoint>(OcclusalPlanePoint.value[1], occMatrix)
   },
   {
     deep: true
