@@ -524,6 +524,7 @@ const uploadChange: UploadProps['onChange'] = (file) => {
       height.value = image.height;
       nextTick(() => {
         handleRest();
+        FHAngle.value = 0
       })
     }
   })

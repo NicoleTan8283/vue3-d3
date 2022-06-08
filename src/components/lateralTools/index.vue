@@ -90,12 +90,12 @@ const tools = ref<Tool[]>([
     emit: 'target',
     active: false,
   },
-  {
-    name: '颜色',
-    icon: 'color',
-    emit: '',
-    active: false,
-  }
+  // {
+  //   name: '颜色',
+  //   icon: 'color',
+  //   emit: '',
+  //   active: false,
+  // }
 ])
 onMounted(() => {
   changeValue('轮廓', props.outline)
