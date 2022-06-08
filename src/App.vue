@@ -13,9 +13,6 @@ function toRoute(routerName: string) {
   <el-button @click="toRoute('tools')">
     侧位片分析
   </el-button>
-  <el-button @click="toRoute('vto')">
-    vto
-  </el-button>
   <router-view />
 </template>
 

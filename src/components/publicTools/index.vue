@@ -8,7 +8,7 @@
         :key="item.name"
         class="tool-item"
         :class="item.active ? 'active' : ''"
-        @click="item.callback ? item.callback() : hendleEmit(item.emit)"
+        @click="item.emit ? hendleEmit(item.emit): item.callback && item.callback()"
       >
         <SvgIcon :name="item.svgicon" />
         <div class="tool-text">
@@ -69,13 +69,21 @@ defineProps({
     required: true
   }
 })
-const emit = defineEmits(['filterChange','hyphenated'])
+type Emit = 'auto' | 'edit' | 'vto' | 'fusion' | 'calibration' | 'setting' | 'contrast' | 'save' | 'reduction' | 'revoke' | 'defaultSize' | 'download'
+type Tool = {
+  svgicon: string;
+  name: string;
+  emit?: Emit;
+  active: boolean;
+  callback?: () => void;
+}
+const emit = defineEmits(['filterChange', 'auto','edit','vto', 'fusion', 'calibration','setting', 'contrast','save','reduction','revoke', 'defaultSize', 'download'])
 const filters = reactive({
   brightness:1,
   contrast: 1,
   invert: 0
 })
-const tools = ref([
+const tools = ref<Tool[]>([
   {
     svgicon: 'auto',
     name: '自动定点',
@@ -154,7 +162,7 @@ const tools = ref([
     active: false,
   },
 ])
-function hendleEmit(event: string) {
+function hendleEmit(event: Emit) {
   if(event === 'edit') {
     const index = tools.value.findIndex(i => i.emit === event);
     tools.value[index].active = !tools.value[index].active;

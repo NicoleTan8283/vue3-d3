@@ -1,6 +1,6 @@
 import axios  from "axios";
 import { ElMessage } from "element-plus";
-const baseURL = 'api';
+const baseURL = import.meta.env.DEV ? 'api': window.base_url;
 const request = axios.create({
   baseURL,
   timeout: 60000

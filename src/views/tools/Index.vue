@@ -849,11 +849,11 @@ watch(
 <style lang="scss" scoped>
 .tool-content {
   @apply w-full overflow-hidden flex-1 flex justify-center items-center relative bg-gray-50;
-  height: calc(100vh - 100px);
+  height: calc(100vh - 80px);
 }
 .setting {
-  @apply bg-gray-100 w-80;
-  height: calc(100vh - 100px);
+  @apply bg-gray-100 w-96;
+  height: calc(100vh - 80px);
 }
 #contentCavans {
   @apply flex items-center justify-center;

@@ -81,6 +81,6 @@ const onButtonClick = (type: 'minus' | 'add') => {
   @apply w-40;
 }
 .input {
-  @apply w-10;
+  @apply w-16;
 }
 </style>

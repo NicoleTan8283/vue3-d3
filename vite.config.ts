@@ -25,7 +25,9 @@ export default defineConfig({
       iconDirs: [resolve(process.cwd(), 'src/icons')],
       symbolId: 'icon-[dir]-[name]',
     }),
-    WindiCSS(),
+    WindiCSS({
+      preflight: false,
+    }),
     legacy({
       ignoreBrowserslistConfig: true,
       targets: ["ie >= 11"],
@@ -60,7 +62,7 @@ export default defineConfig({
     }
   },
   build: {
-    target: ["es2015"]
+    target: ["es2015"],
   },
   server: {
     proxy: {
