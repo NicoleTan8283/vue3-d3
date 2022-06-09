@@ -54,7 +54,7 @@ export const line_Ruler = ['ruler0', 'ruler1']
 export const controPoints = [ 'R3','Go9',
 'Go8',
 'Go7', 'R1', 'G1', 'SoftTissueNa', 'nasion', 'Na', 'Skull1', 'U1RootTip', 'U1IncisalTip', 'L1RootTip', 'L1IncisalTip', 'L6Distal', 'L6Mesial', 'U6Distal', 'U6Mesial']
-export const KeyPoints = [...line_Ruler, 'Or', 'Ubsd', 'Ulsd','Llsd', 'Lbsd','G', 'Na', 'SoftTissueNa','NasalBridgePoint', 'Prn', 'Columella','ANS', 'Subnasale', 'B', 'SoftTissueB', 'A', 'SoftTissueA', 'S', 'Po', 'Pog', 'SoftTissuePog']
+export const KeyPoints = [...line_UpFace,...line_Ruler, "LFa", "UFa", 'Sd', 'Id', 'Or', 'Ubsd', 'Ulsd','Llsd', 'Lbsd','G', 'Na', 'SoftTissueNa','NasalBridgePoint', 'Prn', 'Columella','ANS', 'Subnasale', 'B', 'SoftTissueB', 'A', 'SoftTissueA', 'S', 'Po', 'Pog', 'SoftTissuePog']
 // 用于确定牙齿姿态
 export const line_UpMolars = ['U6Distal', 'U6Mesial']
 export const line_DownMolars = ['L6Distal', 'L6Mesial']
@@ -114,5 +114,355 @@ export const Teeth = [
     width: 83.55,
     height: 131.64,
     matrix: ''
+  },
+]
+
+
+export const upFaceTrans = [
+  {
+    landmark: "NasalBridgePoint",
+    diff: [
+    ],
+    coeff: {
+      x: 1,
+      y: 1
+    }
+  },
+  {
+    landmark: "DorsumOfNose",
+    diff: [
+    ],
+    coeff: {
+      x: 1,
+      y: 1
+    }
+  },
+  {
+    landmark: "Prn",
+    diff: [
+    ],
+    coeff: {
+      x: 1,
+      y: 1
+    }
+  },
+  {
+    landmark: "Columella",
+    diff: [
+      {
+        landmark: 'ANS',
+          coeff: {
+            x: 1,
+            y:1
+        }
+      }
+    ],
+    coeff: {
+      x: 0.4,
+      y: 0.2
+    }
+  },
+  {
+    landmark: "Subnasale",
+    diff: [
+      {
+        landmark: 'ANS',
+          coeff: {
+            x: 0.85,
+            y: 0.85
+        }
+      },
+      {
+        landmark: 'UFa',
+          coeff: {
+            x: 0.15,
+            y: 0.15
+        }
+      }
+    ],
+    coeff: {
+      x: 0.8,
+      y: 0.3
+    }
+  },
+  {
+    landmark: "SoftTissueA",
+    diff: [
+      {
+        landmark: 'A',
+          coeff: {
+            x: 0.85,
+            y: 0.85
+        }
+      },
+      {
+        landmark: 'UFa',
+          coeff: {
+            x: 0.15,
+            y: 0.15
+        }
+      }
+    ],
+    coeff: {
+      x: 0.85,
+      y: 0.4
+    }
+  },
+  {
+    landmark: "LabraleSuperius",
+    diff: [
+      {
+        landmark: 'Sd',
+          coeff: {
+            x: 1,
+            y: 1
+        }
+      },
+    ],
+    coeff: {
+      x: 0.85,
+      y: 0.4
+    }
+  },
+  {
+    landmark: "UpperLip",
+    diff: [
+      {
+        landmark: 'UFa',
+          coeff: {
+            x: 1,
+            y: 1
+        }
+      },
+    ],
+    coeff: {
+      x: 0.85,
+      y: 0.4
+    }
+  },
+  {
+    landmark: "UpperLip_add",
+    diff: [
+      {
+        landmark: 'UFa',
+          coeff: {
+            x: 1,
+            y: 1
+        }
+      },
+    ],
+    coeff: {
+      x: 0.85,
+      y: 0.4
+    }
+  },
+  {
+    landmark: "Stms",
+    diff: [
+      {
+        landmark: 'UFa',
+          coeff: {
+            x: 1,
+            y: 1
+        }
+      },
+    ],
+    coeff: {
+      x: 0.85,
+      y: 0.4
+    }
+  },
+  {
+    landmark: "UpperEmbrasure",
+    diff: [
+      {
+        landmark: 'UFa',
+          coeff: {
+            x: 1,
+            y: 1
+        }
+      },
+    ],
+    coeff: {
+      x: 0.85,
+      y: 0.4
+    }
+  },
+]
+
+export const downFaceTrans = [
+  {
+    landmark: "LowerEmbrasure",
+    diff: [
+      {
+        landmark: 'LFa',
+          coeff: {
+            x: 1,
+            y: 1
+        }
+      },
+    ],
+    coeff: {
+      x: 0.85,
+      y: 0.4
+    }
+  },
+  {
+    landmark: "Stmi",
+    diff: [
+      {
+        landmark: 'LFa',
+          coeff: {
+            x: 1,
+            y: 1
+        }
+      },
+    ],
+    coeff: {
+      x: 0.85,
+      y: 0.4
+    }
+  },
+  {
+    landmark: "LowerLip_add",
+    diff: [
+      {
+        landmark: 'LFa',
+          coeff: {
+            x: 1,
+            y: 1
+        }
+      },
+    ],
+    coeff: {
+      x: 0.85,
+      y: 0.4
+    }
+  },
+  {
+    landmark: "LowerLip",
+    diff: [
+      {
+        landmark: 'LFa',
+          coeff: {
+            x: 1,
+            y: 1
+        }
+      },
+    ],
+    coeff: {
+      x: 0.85,
+      y: 0.4
+    }
+  },
+  {
+    landmark: "LabraleInferius",
+    diff: [
+      {
+        landmark: 'Id',
+          coeff: {
+            x: 1,
+            y: 1
+        }
+      },
+    ],
+    coeff: {
+      x: 0.85,
+      y: 0.4
+    }
+  },
+  {
+    landmark: "SoftTissueB",
+    diff: [
+      {
+        landmark: 'B',
+          coeff: {
+            x: 0.55,
+            y: 0.55
+        }
+      },
+      {
+        landmark: 'LFa',
+          coeff: {
+            x: 0.45,
+            y: 0.45
+        }
+      }
+    ],
+    coeff: {
+      x: 0.85,
+      y: 0.4
+    }
+  },
+  {
+    landmark: "SoftTissuePog",
+    diff: [
+      {
+        landmark: 'Pog',
+          coeff: {
+            x: 0.55,
+            y: 0.55
+        }
+      },
+      {
+        landmark: 'LFa',
+          coeff: {
+            x: 0.45,
+            y: 0.45
+        }
+      }
+    ],
+    coeff: {
+      x: 0.85,
+      y: 0.4
+    }
+  },
+  {
+    landmark: "SoftTissueGn",
+    diff: [
+      {
+        landmark: 'Gn',
+          coeff: {
+            x: 1,
+            y: 1,
+        }
+      },
+    ],
+    coeff: {
+      x: 0.85,
+      y: 0.4
+    }
+  },
+  {
+    landmark: "SoftTissueMe",
+    diff: [
+      {
+        landmark: 'Me',
+          coeff: {
+            x: 1,
+            y: 1,
+        }
+      },
+    ],
+    coeff: {
+      x: 0.7,
+      y: 0.4
+    }
+  },
+  {
+    landmark: "SubmandibularPoint",
+    diff: [
+      {
+        landmark: 'Me',
+          coeff: {
+            x: 1,
+            y: 1,
+        }
+      },
+    ],
+    coeff: {
+      x: 0.3,
+      y: 0.3
+    }
   },
 ]

@@ -393,16 +393,25 @@ export function getToothMatrix(allPoints: KeyPoint[], AIPoints: string[], ToothP
  * @param unit 向量单位
  */
 
-export function computedTargetMatrix(center: PointZ | KeyPoint, toothAngle: number, horizontal: number, vertrical: number, occAngle: number, unit = 1): mat3 {
+export function getTargetMatrix(center: PointZ | KeyPoint, toothAngle: number, horizontal: number, vertrical: number, occAngle: number, unit = 1): mat3 {
   const sin = Math.sin(occAngle * Math.PI / 180);
   const cos = Math.cos(occAngle * Math.PI / 180);
+  const sinFa = Math.sin((90 + occAngle) * Math.PI / 180);
+  const cosFa = Math.cos((90 + occAngle) * Math.PI / 180);
   const xR = horizontal / unit;
   const horizontalX = cos * xR
   const horizontalY = sin * xR
   const yR = vertrical / unit;
-  const vertricalX = sin * yR
-  const vertricalY = cos * yR
+  const vertricalX = cosFa * yR
+  const vertricalY = sinFa * yR
   const roateMatrix = rotateByPoint(toothAngle, [center.x, center.y])
-  const translateMatrix = mat3.translate(mat3.create(),mat3.create(),[horizontalX + vertricalX, horizontalY + vertricalY])
-  return useMatrixs([roateMatrix,translateMatrix])
+  const translateByOccMatrix = mat3.translate(mat3.create(),mat3.create(),[horizontalX, horizontalY])
+  const translateByOccFaMatrix = mat3.translate(mat3.create(),mat3.create(),[vertricalX, vertricalY])
+  return useMatrixs([roateMatrix,translateByOccMatrix,translateByOccFaMatrix])
+}
+
+
+export function getRByX(anlge: number, x: number ): number {
+  const cos = Math.cos(anlge * Math.PI / 180);
+  return x / cos
 }
