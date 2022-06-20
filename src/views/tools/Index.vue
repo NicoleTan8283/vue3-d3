@@ -519,6 +519,9 @@ let svgPath = ref<toothSvgType[]>([
 const onChangeView = (key: 'outline' | 'keyPoint' | 'pointName' | 'point' | 'toothPoint' | 'edit' | 'target', value: boolean) => {
   if(key in showInfo.value) {
     showInfo.value[key] = value;
+    if(key === 'target' && value) {
+      setFaceEndLine()
+    }
   }
 }
 const handleRest = () => {
@@ -706,6 +709,53 @@ const linePo = computed(
     return ellipse
   }
 )
+const setFaceEndLine = () => {
+    const upPoints:KeyPoint[] = [];
+    const downPoint:KeyPoint[] = [];
+    upFaceTrans.forEach(i => {
+      const point = Object.assign({},allPoints.value.find(point => point.landmark === i.landmark));
+      let positionX = 0;
+      let positionY = 0;
+      if(point) {
+        i.diff.forEach(item => {
+          if(upToothSvgRound.includes(item.landmark) || upToothSvgCenter.includes(item.landmark) || item.landmark === 'Sd') {
+            const diffPoint = allPoints.value.find(point => point.landmark === item.landmark);
+            item.landmark === 'Sd' && console.log(diffPoint);
+            if(diffPoint) {
+              const endPoint = pointUseMatrix<KeyPoint>(diffPoint, toothMatrixs.value['上切牙'])
+              positionX += (endPoint.x - diffPoint.x) * item.coeff.x
+              positionY += (endPoint.y - diffPoint.y) * item.coeff.y
+            }
+          }
+        })
+        point.x += positionX * i.coeff.x;
+        point.y += positionY * i.coeff.y;
+        upPoints.push(point);
+      }
+    })
+    downFaceTrans.forEach(i => {
+      const point = Object.assign({},allPoints.value.find(point => point.landmark === i.landmark));
+      let positionX = 0;
+      let positionY = 0;
+      if(point) {
+        i.diff.forEach(item => {
+          if(lowToothSvgRound.includes(item.landmark) || lowToothSvgCenter.includes(item.landmark) || item.landmark === 'Id') {
+            const diffPoint = allPoints.value.find(point => point.landmark === item.landmark);
+            if(diffPoint) {
+              const endPoint = pointUseMatrix<KeyPoint>(diffPoint, toothMatrixs.value['下切牙'])
+              positionX += (endPoint.x - diffPoint.x) * item.coeff.x
+              positionY += (endPoint.y - diffPoint.y) * item.coeff.y
+            }
+          }
+        })
+        point.x += positionX * i.coeff.x;
+        point.y += positionY * i.coeff.y;
+        downPoint.push(point);
+      }
+    })
+    upFaceEnd.value = createLine(upPoints.map(i => [i.x, i.y]))
+    downFaceEnd.value = createLine(downPoint.map(i => [i.x, i.y]))
+}
 watch(
   () => toothKeyPoint.value,
   (newValue, oldValue) => {
@@ -798,51 +848,7 @@ watch(
 watch(
   () => toothMatrixs.value,
   () => {
-    const upPoints:KeyPoint[] = [];
-    const downPoint:KeyPoint[] = [];
-    upFaceTrans.forEach(i => {
-      const point = Object.assign({},allPoints.value.find(point => point.landmark === i.landmark));
-      let positionX = 0;
-      let positionY = 0;
-      if(point) {
-        i.diff.forEach(item => {
-          if(upToothSvgRound.includes(item.landmark) || upToothSvgCenter.includes(item.landmark) || item.landmark === 'Sd') {
-            const diffPoint = allPoints.value.find(point => point.landmark === item.landmark);
-            item.landmark === 'Sd' && console.log(diffPoint);
-            if(diffPoint) {
-              const endPoint = pointUseMatrix<KeyPoint>(diffPoint, toothMatrixs.value['上切牙'])
-              positionX += (endPoint.x - diffPoint.x) * item.coeff.x
-              positionY += (endPoint.y - diffPoint.y) * item.coeff.y
-            }
-          }
-        })
-        point.x += positionX * i.coeff.x;
-        point.y += positionY * i.coeff.y;
-        upPoints.push(point);
-      }
-    })
-    downFaceTrans.forEach(i => {
-      const point = Object.assign({},allPoints.value.find(point => point.landmark === i.landmark));
-      let positionX = 0;
-      let positionY = 0;
-      if(point) {
-        i.diff.forEach(item => {
-          if(lowToothSvgRound.includes(item.landmark) || lowToothSvgCenter.includes(item.landmark) || item.landmark === 'Id') {
-            const diffPoint = allPoints.value.find(point => point.landmark === item.landmark);
-            if(diffPoint) {
-              const endPoint = pointUseMatrix<KeyPoint>(diffPoint, toothMatrixs.value['下切牙'])
-              positionX += (endPoint.x - diffPoint.x) * item.coeff.x
-              positionY += (endPoint.y - diffPoint.y) * item.coeff.y
-            }
-          }
-        })
-        point.x += positionX * i.coeff.x;
-        point.y += positionY * i.coeff.y;
-        downPoint.push(point);
-      }
-    })
-    upFaceEnd.value = createLine(upPoints.map(i => [i.x, i.y]))
-    downFaceEnd.value = createLine(downPoint.map(i => [i.x, i.y]))
+    setFaceEndLine()
   }
 )
 watch(
