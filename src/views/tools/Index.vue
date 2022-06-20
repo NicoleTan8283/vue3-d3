@@ -594,7 +594,6 @@ const onGetKeyPoints = () => {
     }
     allPoints.value = points;
     computedDistance();
-    setOcc();
     const Or = allPoints.value.find(i => i.landmark === 'Or')
     const Po = allPoints.value.find(i => i.landmark === 'Po')
     if(Or && Po) {
@@ -919,6 +918,7 @@ watch(
         svg.roundPoint.dString = createLine(roundPoints, d3.curveCatmullRom.alpha(1));
         svg.centerPoint.dString = createLine(centerPoints, d3.curveCatmullRom.alpha(1));
       })
+      setOcc();
     }
   },
   {
