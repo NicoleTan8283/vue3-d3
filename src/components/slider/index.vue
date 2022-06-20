@@ -11,7 +11,7 @@
         -
       </el-button>
       <el-slider
-        :model-value="modelValue"
+        :model-value="decimalAdjust('round',modelValue, -1)"
         class="slider"
         :show-tooltip="false"
         :max="max"
@@ -26,7 +26,7 @@
         +
       </el-button>
       <el-input
-        :model-value="modelValue"
+        :model-value="decimalAdjust('round',modelValue, -1)"
         class="input"
         size="small"
         :disabled="true"
@@ -36,7 +36,7 @@
 </template>
 
 <script setup lang="ts">
-
+import { decimalAdjust } from '@/utils/public'
 const props = defineProps({
   modelValue: {
     type: Number,
@@ -65,7 +65,7 @@ const props = defineProps({
 })
 const emit = defineEmits(['update:modelValue'])
 const onChangeValue = (val: number) => {
-  emit('update:modelValue', Number(val.toFixed(1)))
+  emit('update:modelValue', decimalAdjust('round', val, -1))
 }
 const onButtonClick = (type: 'minus' | 'add') => {
   if(type === 'minus') {
