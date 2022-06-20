@@ -54,7 +54,7 @@ export const line_Ruler = ['ruler0', 'ruler1']
 export const controPoints = [ 'R3','Go9',
 'Go8',
 'Go7', 'R1', 'G1', 'SoftTissueNa', 'nasion', 'Na', 'Skull1', 'U1RootTip', 'U1IncisalTip', 'L1RootTip', 'L1IncisalTip', 'L6Distal', 'L6Mesial', 'U6Distal', 'U6Mesial']
-export const KeyPoints = [...line_UpFace,...line_Ruler, "LFa", "UFa", 'Sd', 'Id', 'Or', 'Ubsd', 'Ulsd','Llsd', 'Lbsd','G', 'Na', 'SoftTissueNa','NasalBridgePoint', 'Prn', 'Columella','ANS', 'Subnasale', 'B', 'SoftTissueB', 'A', 'SoftTissueA', 'S', 'Po', 'Pog', 'SoftTissuePog']
+export const KeyPoints = [...line_UpFace,...line_Ruler, "LFa", "UFa", 'Or', 'Ubsd', 'Ulsd','Llsd', 'Lbsd','G', 'Na', 'SoftTissueNa','NasalBridgePoint', 'Prn', 'Columella','ANS', 'Subnasale', 'B', 'SoftTissueB', 'A', 'SoftTissueA', 'S', 'Po', 'Pog', 'SoftTissuePog']
 // 用于确定牙齿姿态
 export const line_UpMolars = ['U6Distal', 'U6Mesial']
 export const line_DownMolars = ['L6Distal', 'L6Mesial']
@@ -181,30 +181,44 @@ export const upFaceTrans = [
       }
     ],
     coeff: {
-      x: 0.8,
+      x: 0.60,
       y: 0.3
     }
   },
   {
     landmark: "SoftTissueA",
     diff: [
+      // {
+      //   landmark: 'A',
+      //     coeff: {
+      //       x: 0.85,
+      //       y: 0.85
+      //   }
+      // },
+      // {
+      //   landmark: 'UFa',
+      //     coeff: {
+      //       x: 0.15,
+      //       y: 0.15
+      //   }
+      // }
       {
         landmark: 'A',
           coeff: {
-            x: 0.85,
-            y: 0.85
+            x: 0.7,
+            y: 0.7
         }
       },
       {
         landmark: 'UFa',
           coeff: {
-            x: 0.15,
-            y: 0.15
+            x: 0.3,
+            y: 0.3
         }
       }
     ],
     coeff: {
-      x: 0.85,
+      x: 0.70,
       y: 0.4
     }
   },
@@ -212,10 +226,24 @@ export const upFaceTrans = [
     landmark: "LabraleSuperius",
     diff: [
       {
-        landmark: 'Sd',
+        landmark: 'Ubsd',
           coeff: {
-            x: 1,
-            y: 1
+            x: 0.65,
+            y: 0.65
+        }
+      },
+      // {
+      //   landmark: 'UFa',
+      //     coeff: {
+      //       x: 0.7,
+      //       y: 0.7
+      //   }
+      // },
+      {
+        landmark: 'A',
+          coeff: {
+            x: 0.35,
+            y: 0.35
         }
       },
     ],
@@ -359,7 +387,7 @@ export const downFaceTrans = [
     landmark: "LabraleInferius",
     diff: [
       {
-        landmark: 'Id',
+        landmark: 'Lbsd',
           coeff: {
             x: 1,
             y: 1

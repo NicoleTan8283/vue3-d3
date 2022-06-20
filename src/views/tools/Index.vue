@@ -283,15 +283,15 @@
             v-model="teethTransform[activeTeeth].horizontal"
             title="水平："
             unit-text="mm"
-            :max="50"
-            :min="-50"
+            :max="10"
+            :min="-10"
           />
           <Slider
             v-model="teethTransform[activeTeeth].vertrical"
             title="垂直："
             unit-text="mm"
-            :max="50"
-            :min="-50"
+            :max="10"
+            :min="-10"
           />
           <Slider
             v-model="teethTransform[activeTeeth].angle"
@@ -304,6 +304,8 @@
             v-model="FHAngle"
             title="FH平面："
             unit-text="度" 
+            :max="25"
+            :min="-25"
           />
         </div>
       </div>
@@ -593,8 +595,10 @@ const onGetKeyPoints = () => {
     const Or = allPoints.value.find(i => i.landmark === 'Or')
     const Po = allPoints.value.find(i => i.landmark === 'Po')
     if(Or && Po) {
-      const angle = Number(getAngle( Po, Or, {x:0,y: 0}, {x:10,y:0},  true).toFixed(1))
-      FHAngle.value = angle > 180 ? 360 - angle : angle
+      const angle = getAngle( Or, Po, {x:10,y:0}, {x:0,y: 0}, true)
+      FHAngle.value = decimalAdjust('round',angle > 180 ? -(360 - angle) : angle, -1)
+      console.log('angle :>> ', angle);
+      console.log('FHAngle.value :>> ', FHAngle.value);
     }
     nextTick(
       () => {
