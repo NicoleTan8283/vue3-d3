@@ -54,7 +54,7 @@ export const line_Ruler = ['ruler0', 'ruler1']
 export const controPoints = [ 'R3','Go9',
 'Go8',
 'Go7', 'R1', 'G1', 'SoftTissueNa', 'nasion', 'Na', 'Skull1', 'U1RootTip', 'U1IncisalTip', 'L1RootTip', 'L1IncisalTip', 'L6Distal', 'L6Mesial', 'U6Distal', 'U6Mesial']
-export const KeyPoints = [...line_UpFace,...line_Ruler, "LFa", "UFa", 'Or', 'Ubsd', 'Ulsd','Llsd', 'Lbsd','G', 'Na', 'SoftTissueNa','NasalBridgePoint', 'Prn', 'Columella','ANS', 'Subnasale', 'B', 'SoftTissueB', 'A', 'SoftTissueA', 'S', 'Po', 'Pog', 'SoftTissuePog']
+export const KeyPoints = ['U6Distal', 'U6Mesial','L6Distal', 'L6Mesial', 'U1RootTip', 'U1IncisalTip','L1RootTip', 'L1IncisalTip', ...line_UpFace,...line_Ruler, "LFa", "UFa", 'Or', 'Ubsd', 'Ulsd','Llsd', 'Lbsd','G', 'Na', 'SoftTissueNa','NasalBridgePoint', 'Prn', 'Columella','ANS', 'Subnasale', 'B', 'SoftTissueB', 'A', 'SoftTissueA', 'S', 'Po', 'Pog', 'SoftTissuePog']
 // 用于确定牙齿姿态
 export const line_UpMolars = ['U6Distal', 'U6Mesial']
 export const line_DownMolars = ['L6Distal', 'L6Mesial']
