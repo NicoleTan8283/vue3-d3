@@ -45,7 +45,7 @@
                 :id="line.name"
                 :key="line.name"
                 :d="line.lineString"
-                stroke="#ffffff"
+                :stroke="lineColor"
                 stroke-opacity="0.8"
                 fill="none"
               />
@@ -55,7 +55,7 @@
                 :y1="OcclusalPlanePoint[0].y"
                 :x2="OcclusalPlanePoint[1].x"
                 :y2="OcclusalPlanePoint[1].y"
-                stroke="#f00"
+                :stroke="targetColor"
               />
               <ellipse
                 v-if="linePo.cx"
@@ -66,7 +66,7 @@
                 stroke-linejoin="round"
                 stroke-linecap="round"
                 stroke-opacity="0.8"
-                stroke="#ffffff"
+                :stroke="lineColor"
                 fill="none"
               />
             </g>
@@ -80,9 +80,9 @@
               >
                 <path
                   :id="tooth.name +'round'"
-                  fill="#fff"
+                  :fill="lineColor"
                   fill-opacity="0.2"
-                  stroke="#ffffff"
+                  :stroke="lineColor"
                   stroke-opacity="0.8"
                   :d="tooth.roundPoint.dString"
                   :style="
@@ -94,7 +94,7 @@
                 <path
                   :id="tooth.name +'center'"
                   fill="none"
-                  stroke="#ffffff"
+                  :stroke="lineColor"
                   stroke-opacity="0.8"
                   :d="tooth.centerPoint.dString"
                   :style="
@@ -108,9 +108,9 @@
                 v-for="tooth in teeth"
                 :id="tooth.id"
                 :key="tooth.id"
-                fill="#fff"
+                :fill="lineColor"
                 fill-opacity="0.2"
-                stroke="#ffffff"
+                :stroke="lineColor"
                 stroke-opacity="0.8"
                 :d="tooth.path"
                 :transform="tooth.matrix"
@@ -127,9 +127,9 @@
             >
               <path
                 :id="svgPath[0].name +'round'"
-                fill="#f00"
+                :fill="targetColor"
                 fill-opacity="0.2"
-                stroke="#f00"
+                :stroke="targetColor"
                 stroke-opacity="0.8"
                 stroke-width="1"
                 :d="svgPath[0].roundPoint.dString"
@@ -137,7 +137,7 @@
               <path
                 :id="svgPath[0].name +'center'"
                 fill="none"
-                stroke="#f00"
+                :stroke="targetColor"
                 stroke-opacity="0.8"
                 stroke-width="1"
                 :d="svgPath[0].centerPoint.dString"
@@ -154,9 +154,9 @@
             >
               <path
                 :id="svgPath[1].name +'round'"
-                fill="#f00"
+                :fill="targetColor"
                 fill-opacity="0.2"
-                stroke="#f00"
+                :stroke="targetColor"
                 stroke-opacity="0.8"
                 stroke-width="1"
                 :d="svgPath[1].roundPoint.dString"
@@ -164,7 +164,7 @@
               <path
                 :id="svgPath[1].name +'center'"
                 fill="none"
-                stroke="#f00"
+                :stroke="targetColor"
                 stroke-opacity="0.8"
                 stroke-width="1"
                 :d="svgPath[1].centerPoint.dString"
@@ -174,7 +174,7 @@
               <path
                 :id="'upFaceEnd'"
                 fill="none"
-                stroke="#f00"
+                :stroke="targetColor"
                 stroke-opacity="0.8"
                 stroke-width="1"
                 :d="upFaceEnd"
@@ -182,7 +182,7 @@
               <path
                 :id="'downFaceEnd'"
                 fill="none"
-                stroke="#f00"
+                :stroke="targetColor"
                 stroke-opacity="0.8"
                 stroke-width="1"
                 :d="downFaceEnd"
@@ -200,8 +200,8 @@
                   r="1"
                   :cx="item.x"
                   :cy="item.y"
-                  :fill="item.isKeyPoint ? '#f00' : '#aaa'"
-                  :stroke="item.isKeyPoint ? '#f00' : '#aaa'"
+                  :fill="item.isKeyPoint ? keyPointColor : pointColor"
+                  :stroke="item.isKeyPoint ? keyPointColor : pointColor"
                   :style="
                     {
                       cursor: showInfo.edit ? 'pointer' : 'auto'
@@ -216,8 +216,8 @@
                     r="1"
                     :cx="item.x"
                     :cy="item.y"
-                    :fill="'#f00'"
-                    :stroke="'#f00'"
+                    :fill="keyPointColor"
+                    :stroke="keyPointColor"
                     :style="
                       {
                         cursor: showInfo.edit ? 'pointer' : 'auto'
@@ -229,7 +229,7 @@
                     :id="item.landmark"
                     :x="item.x + 10"
                     :y="item.y + 10"
-                    :fill="'#f00'"
+                    :fill="keyPointColor"
                     class="text"
                   >
                     {{ item.landmark }}
@@ -242,8 +242,8 @@
                   r="1"
                   :cx="item.x"
                   :cy="item.y"
-                  :fill="item.isKeyPoint ? '#f00' : '#aaa'"
-                  :stroke="item.isKeyPoint ? '#f00' : '#aaa'"
+                  :fill="item.isKeyPoint ? keyPointColor : pointColor"
+                  :stroke="item.isKeyPoint ? keyPointColor : pointColor"
                   :style="
                     {
                       cursor: showInfo.edit ? 'pointer' : 'auto'
@@ -330,6 +330,8 @@ import { matrixToTransform, rotateByPoint, useMatrixs } from '@/utils/matrix';
 import { getTargetMatrix, getToothMatrix, lowtoothPoint, UptoothPoint } from '@/utils/tooth';
 import { mat3 } from 'gl-matrix'
 import * as _ from 'lodash'
+import { lateralConfig } from '@/store'
+import { storeToRefs } from 'pinia';
 type LineType = {
     name: string;
     points: Point[];
@@ -338,6 +340,8 @@ type LineType = {
 }
 const zoomSelector = "#contentCavans"
 const transformSelector = "#contentCavans g"
+const store = lateralConfig();
+const { lineColor, pointColor, keyPointColor, targetColor } = storeToRefs(store)
 const showInfo = ref({
   'edit': false,
   'outline': true,

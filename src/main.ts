@@ -7,4 +7,8 @@ import '@/assets/preflight.css'
 // element-pluse 插件按需导入导致ElMessage 无样式
 import 'element-plus/theme-chalk/el-message.css';
 import 'virtual:windi.css'
-createApp(App).use(router as any).component('SvgIcon', SvgIcon).mount('#app')
+import { createPinia } from 'pinia'
+import piniaPersist from 'pinia-plugin-persist'
+const pinia = createPinia();
+pinia.use(piniaPersist)
+createApp(App).use(router as any).use(pinia as any).component('SvgIcon', SvgIcon).mount('#app')

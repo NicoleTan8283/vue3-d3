@@ -14,7 +14,13 @@
     "skipLibCheck": true,
     "baseUrl": ".",
     "paths": { "@/*": ["./src/*"] },
-    "types": ["vite/client", "element-plus/global", "node", "webpack-env"]
+    "types": [
+      "vite/client",
+      "element-plus/global",
+      "node",
+      "webpack-env",
+      "pinia-plugin-persist"
+    ]
   },
   "include": [
     "src/**/*.ts",

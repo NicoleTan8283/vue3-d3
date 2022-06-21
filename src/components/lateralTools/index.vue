@@ -9,11 +9,45 @@
       <SvgIcon :name="tool.icon" />
       <div>{{ tool.name }}</div>
     </div>
+    <el-dialog
+      v-model="dialogVisible"
+      title="Tips"
+      width="30%"
+    >
+      <div class="demo-color-block">
+        <span class="demonstration">lineColor</span>
+        <el-color-picker v-model="lineColor" />
+      </div>
+      <div class="demo-color-block">
+        <span class="demonstration">lineColor</span>
+        <el-color-picker v-model="pointColor" />
+      </div>
+      <div class="demo-color-block">
+        <span class="demonstration">lineColor</span>
+        <el-color-picker v-model="keyPointColor" />
+      </div>
+      <div class="demo-color-block">
+        <span class="demonstration">lineColor</span>
+        <el-color-picker v-model="targetColor" />
+      </div>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button
+            type="primary"
+            @click="dialogVisible = false"
+          >确定</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
+import { lateralConfig } from '@/store'
+import { storeToRefs } from 'pinia';
+const store = lateralConfig();
+const { lineColor, pointColor, keyPointColor, targetColor } = storeToRefs(store)
 type Tool = {
   name: string;
   icon: string;
@@ -46,6 +80,7 @@ const props = defineProps({
     default: false,
   },
 })
+const dialogVisible = ref(false)
 const emits = defineEmits(['changeActive'])
 const tools = ref<Tool[]>([
   {
@@ -90,12 +125,12 @@ const tools = ref<Tool[]>([
     emit: 'target',
     active: false,
   },
-  // {
-  //   name: '颜色',
-  //   icon: 'color',
-  //   emit: '',
-  //   active: false,
-  // }
+  {
+    name: '颜色',
+    icon: 'color',
+    emit: '',
+    active: false,
+  }
 ])
 onMounted(() => {
   changeValue('轮廓', props.outline)
@@ -117,7 +152,7 @@ const onClickTool = (tool: Tool) => {
   if(tool.name !=='颜色') {
     changeValue(tool.name, !tool.active)
   } else if(tool.name === '颜色') {
-    console.log('click color')
+    dialogVisible.value = true
   }
   // 禁止编辑和目标位同时开启
   if(tool.name === '目标位' || tool.name === '编辑') {

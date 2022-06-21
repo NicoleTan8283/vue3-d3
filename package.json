@@ -14,7 +14,8 @@
     "element-plus": "^2.2.4",
     "gl-matrix": "^3.4.3",
     "lodash": "^4.17.21",
-    "pinia": "^2.0.13",
+    "pinia": "^2.0.14",
+    "pinia-plugin-persist": "^1.0.0",
     "vue": "^3.2.25",
     "vue-router": "^4.0.15",
     "zzzj": "^1.0.9"
