@@ -16,7 +16,7 @@ import { createRouter, createWebHashHistory, RouteRecordRaw } from "vue-router";
 const constantRoutes: Array<RouteRecordRaw> = [
   {
     path: '/',
-    redirect: 'tools'
+    redirect: 'test'
   },
   {
     path: '/vto',
@@ -31,6 +31,13 @@ const constantRoutes: Array<RouteRecordRaw> = [
       name: 'tools'
     },
     component: () => import(/* webpackChunkName: "redirect" */ '@/views/tools/index.vue')
+  },
+  {
+    path: '/test',
+    meta: {
+      name: 'test'
+    },
+    component: () => import(/* webpackChunkName: "redirect" */ '@/views/test/index.vue')
   },
 ]
 
